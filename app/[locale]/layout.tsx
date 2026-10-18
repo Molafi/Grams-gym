@@ -24,6 +24,11 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+// Render per request. Every page under this layout depends on the session (navbar, test-mode
+// ribbon) and on live DB data (⌘K product palette, plans, stock). Static prerendering would bake
+// a signed-out shell and build-time data into the HTML, and makes `next build` require a database.
+export const dynamic = "force-dynamic";
+
 export const viewport: Viewport = {
   themeColor: "#07080A",
   colorScheme: "dark",
