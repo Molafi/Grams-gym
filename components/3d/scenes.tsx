@@ -71,13 +71,18 @@ function smoothBump(p: number, center: number, width: number) {
 
 function StoryScene({ tier }: { tier: Tier }) {
   const s = TIER_SETTINGS[tier];
-  const refs = [useRef<Group>(null), useRef<Group>(null), useRef<Group>(null), useRef<Group>(null)];
+  // Separate named refs: indexing an array of refs during render trips the React
+  // Compiler's `react-hooks/refs` rule. The array is only built inside useFrame.
+  const weightRef = useRef<Group>(null);
+  const kettlebellRef = useRef<Group>(null);
+  const plateRef = useRef<Group>(null);
+  const barbellRef = useRef<Group>(null);
   const centers = [0.08, 0.36, 0.64, 0.92];
   const baseScale = [1.2, 1.15, 1.15, 0.85];
 
   useFrame((state, dt) => {
     const p = scrollStore.story;
-    refs.forEach((r, i) => {
+    [weightRef, kettlebellRef, plateRef, barbellRef].forEach((r, i) => {
       const g = r.current;
       if (!g) return;
       const w = i === 0 ? Math.max(smoothBump(p, centers[i]!, 0.28), p < centers[0]! ? 1 : 0) : i === 3 ? Math.max(smoothBump(p, centers[i]!, 0.28), p > centers[3]! ? 1 : 0) : smoothBump(p, centers[i]!, 0.28);
@@ -94,16 +99,16 @@ function StoryScene({ tier }: { tier: Tier }) {
     <>
       <PerspectiveCamera makeDefault position={[0, 0.4, 6.2]} fov={30} />
       <Studio resolution={s.envRes} />
-      <group ref={refs[0]}>
+      <group ref={weightRef}>
         <CalibrationWeight />
       </group>
-      <group ref={refs[1]}>
+      <group ref={kettlebellRef}>
         <Kettlebell />
       </group>
-      <group ref={refs[2]} rotation={[0.2, 0, 0]}>
+      <group ref={plateRef} rotation={[0.2, 0, 0]}>
         <OlympicPlate />
       </group>
-      <group ref={refs[3]} rotation={[0.25, 0, 0.12]}>
+      <group ref={barbellRef} rotation={[0.25, 0, 0.12]}>
         <Barbell />
       </group>
       {s.shadows ? <ContactShadows position={[0, -1.25, 0]} opacity={0.5} scale={8} blur={2.4} far={3} resolution={256} /> : null}
