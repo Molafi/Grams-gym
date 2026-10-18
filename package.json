@@ -1,0 +1,65 @@
+{
+  "name": "grams-gym-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GRAMS GYM — premium bilingual (AR/EN) gym platform: 3D site, memberships, supplement shop, admin.",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "ci": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "postinstall": "prisma generate",
+    "db:up": "docker compose up -d db",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "posters": "node scripts/generate-posters.mjs"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.10.0",
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
+    "@prisma/client": "~6.16.0",
+    "@react-three/drei": "^10.7.0",
+    "@react-three/fiber": "^9.3.0",
+    "lenis": "^1.3.0",
+    "lucide-react": "^0.544.0",
+    "motion": "^12.23.0",
+    "next": "^16.0.0",
+    "next-auth": "5.0.0-beta.29",
+    "next-intl": "^4.3.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1",
+    "three": "^0.180.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.180.0",
+    "eslint": "^9.36.0",
+    "eslint-config-next": "^16.0.0",
+    "prisma": "~6.16.0",
+    "tailwindcss": "^4.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

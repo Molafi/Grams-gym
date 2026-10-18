@@ -1,0 +1,594 @@
+{
+  "meta": {
+    "siteTitle": "GRAMS GYM — Each Gram Matters | Amman",
+    "siteDescription": "GRAMS GYM, Jordan's Muscle Factory in Amman. Heavy iron, serious coaches, flexible memberships and a supplement store.",
+    "home": "Jordan's Muscle Factory",
+    "about": "Our story",
+    "services": "Services",
+    "facilities": "Facilities",
+    "contact": "Contact",
+    "packages": "Memberships",
+    "shop": "Supplement store",
+    "cart": "Cart",
+    "signin": "Sign in",
+    "account": "My account",
+    "admin": "Admin",
+    "legal": "Legal"
+  },
+  "a11y": {
+    "skip": "Skip to content",
+    "menu": "Menu",
+    "close": "Close",
+    "openPalette": "Search pages and products",
+    "scene": "3D scene"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "Our story",
+    "services": "Services",
+    "facilities": "Facilities",
+    "packages": "Memberships",
+    "shop": "Store",
+    "contact": "Contact",
+    "account": "Account",
+    "admin": "Admin",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "cart": "Cart",
+    "search": "Search",
+    "switchLanguage": "العربية",
+    "joinNow": "Join now"
+  },
+  "palette": {
+    "placeholder": "Search pages and products…",
+    "pages": "Pages",
+    "products": "Products",
+    "empty": "Nothing matches that.",
+    "hint": "Navigate with ↑ ↓, open with Enter"
+  },
+  "testMode": {
+    "ribbon": "TEST MODE — payments are simulated, no real money",
+    "simulated": "Payment simulator"
+  },
+  "common": {
+    "learnMore": "Learn more",
+    "viewAll": "View all",
+    "back": "Back",
+    "loading": "Loading…",
+    "save": "Save",
+    "saved": "Saved",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "delete": "Delete",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "demo": "Demo",
+    "placeholder": "Placeholder",
+    "error": "Something went wrong. Please try again.",
+    "rateLimited": "Too many attempts. Please wait a moment and try again.",
+    "photoPending": "Photo coming soon",
+    "days": "{count, plural, =0 {0 days} one {# day} other {# days}}"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Amman · Muscle Factory",
+      "title": "Each gram",
+      "titleAccent": "matters.",
+      "subtitle": "Jordan's home for serious athletes. Heavy iron, coaches who've been there, and a community that won't let you quit.",
+      "ctaPrimary": "Choose your membership",
+      "ctaSecondary": "Free consultation",
+      "scroll": "Scroll",
+      "sceneLabel": "The GRAMS GYM GG monogram in brushed silver, surrounded by orbiting chrome calibration weights."
+    },
+    "story": {
+      "eyebrow": "Each Gram Matters",
+      "title": "It starts with one gram.",
+      "steps": {
+        "s1": {
+          "title": "One gram",
+          "body": "Every rep. Every meal. Every night of sleep. Small, but it counts."
+        },
+        "s2": {
+          "title": "Then a kettlebell",
+          "body": "Consistency turns grams into kilos. This is where habit becomes strength."
+        },
+        "s3": {
+          "title": "Then a plate",
+          "body": "Twenty kilos of proof that you showed up when it was hard."
+        },
+        "s4": {
+          "title": "Then the bar",
+          "body": "Twenty thousand grams of steel. You don't lift it once — you build up to it."
+        }
+      },
+      "counterLabel": "grams lifted",
+      "sceneLabel": "A chrome calibration weight morphs into a kettlebell, an Olympic plate, then a barbell as you scroll."
+    },
+    "stats": {
+      "years": "years building champions",
+      "members": "athletes in the family"
+    },
+    "packages": {
+      "eyebrow": "Memberships",
+      "title": "Pick your pace. Keep your promise.",
+      "subtitle": "Monthly, quarterly or yearly. Cancel or pause from your account."
+    },
+    "shop": {
+      "eyebrow": "Supplement store",
+      "title": "Fuel, without the guesswork.",
+      "subtitle": "Picked by our coaches. Pick up at the gym or get it delivered in Amman."
+    },
+    "facilities": {
+      "eyebrow": "The floor",
+      "title": "Built for heavy days."
+    },
+    "coaches": {
+      "eyebrow": "The coaches",
+      "title": "People who've lifted what you're lifting."
+    }
+  },
+  "cta": {
+    "title": "Get a free consultation",
+    "subtitle": "Right now, right here.",
+    "button": "Get a free consultation",
+    "help": "Need help?"
+  },
+  "about": {
+    "eyebrow": "Our story",
+    "title": "Why",
+    "titleAccent": "each gram matters?",
+    "p1": "GRAMS GYM was founded to be the first destination for serious athletes in Jordan. We don't just offer a place to train — we offer an arena to prove yourself.",
+    "p2": "Over {years}+ years we've built a community of {members}+ athletes committed to transforming their bodies and their lives. Our slogan, \"Each Gram Matters\", isn't just words — it's a method: every gram of iron, every gram of effort and every gram of nutrition builds your strongest self.",
+    "p3": "We equip our facility with the newest and heaviest equipment on the market to meet the needs of bodybuilding champions and professional athletes, while giving determined beginners a safe, supportive environment.",
+    "valuesTitle": "Our core values",
+    "values": {
+      "discipline": {
+        "title": "Absolute discipline",
+        "body": "We don't believe in excuses. We provide the environment and the equipment; you bring the effort and the commitment."
+      },
+      "energy": {
+        "title": "Maximum energy",
+        "body": "An atmosphere full of drive and positive energy that pushes you past your limits every session."
+      },
+      "community": {
+        "title": "A strong community",
+        "body": "You're not alone. Join a community of athletes who share your passion and ambition."
+      }
+    },
+    "visionTitle": "The GRAMS GYM vision",
+    "vision": "GRAMS GYM began as the idea of a complete sports center that brings together the strongest equipment, the best coaches and a full athletic community that pushes you to become the best version of yourself.",
+    "strengthTitle": "Strength and fitness",
+    "strength": "Designed to be Jordan's number-one center for fitness and bodybuilding, with the newest and most powerful iron and advanced fitness machines.",
+    "allServices": "View all services"
+  },
+  "coaches": {
+    "ahmad": "Coach Ahmad",
+    "amr": "Coach Amr",
+    "simon": "Coach Simon",
+    "zaid": "Coach Zaid",
+    "role": "GRAMS GYM coach"
+  },
+  "services": {
+    "eyebrow": "Services",
+    "title": "Everything you need to build. Nothing you don't.",
+    "items": {
+      "training": {
+        "title": "Bodybuilding & strength",
+        "body": "Free weights, racks and plate-loaded machines for heavy, progressive training."
+      },
+      "personal": {
+        "title": "Personal training",
+        "body": "One-to-one coaching with a program, technique work and weekly accountability."
+      },
+      "nutrition": {
+        "title": "Nutrition plans",
+        "body": "Practical meal plans that fit your goal and your week — no fad diets."
+      },
+      "cardio": {
+        "title": "Cardio & conditioning",
+        "body": "A full cardio zone to build your engine alongside your strength."
+      }
+    }
+  },
+  "facilities": {
+    "eyebrow": "Facilities",
+    "title": "The Muscle Factory floor.",
+    "items": {
+      "weights": {
+        "title": "Free-weight zone",
+        "body": "A full dumbbell line-up and heavy plates for serious sessions."
+      },
+      "machines": {
+        "title": "Resistance machines",
+        "body": "Selectorized and plate-loaded machines for every muscle group."
+      },
+      "cardio": {
+        "title": "Cardio zone",
+        "body": "Treadmills, bikes and cross-trainers by the windows."
+      },
+      "lounge": {
+        "title": "Coaching corner",
+        "body": "Assessments, programming and nutrition consultations with our coaches."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Come in. Let's talk goals.",
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "address": "Address",
+    "directions": "Get directions",
+    "social": "Follow us",
+    "hours": "Opening hours"
+  },
+  "hours": {
+    "title": "Opening hours",
+    "satWed": "Saturday – Wednesday",
+    "thu": "Thursday",
+    "fri": "Friday"
+  },
+  "footer": {
+    "about": "Jordan's number-one Muscle Factory. Equipped with the newest and heaviest equipment to meet the needs of professional athletes and to produce champions.",
+    "quickLinks": "Quick links",
+    "legal": "Legal",
+    "reviews": "Google reviews",
+    "rights": "All rights reserved.",
+    "credit": "Designed & developed by"
+  },
+  "packages": {
+    "eyebrow": "Memberships",
+    "title": "Your membership. Your rules.",
+    "subtitle": "Pay online and your membership activates the moment the payment is confirmed. Prefer to pay at the desk? Our team will set you up.",
+    "interval": {
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    },
+    "per": {
+      "monthly": "/ month",
+      "quarterly": "/ 3 months",
+      "yearly": "/ year"
+    },
+    "recommended": "Most chosen",
+    "join": "Join {plan}",
+    "current": "Your current plan",
+    "flip": "See benefits",
+    "flipBack": "Back to price",
+    "placeholderNote": "Plans and prices are placeholders until the owner confirms them.",
+    "addonsTitle": "Add-ons",
+    "payAtDesk": "Prefer to pay at the gym? Visit the front desk and we'll activate your membership.",
+    "notConfigured": "Online payment isn't configured for this plan yet. Please contact us on WhatsApp."
+  },
+  "billing": {
+    "confirming": "Confirming your payment…",
+    "confirmingBody": "This usually takes a few seconds. Do not close this page.",
+    "confirmed": "Payment confirmed. Your membership is active.",
+    "timeout": "We haven't received confirmation yet. It may take a few minutes — this page will update automatically when it arrives.",
+    "simulatorTitle": "Test checkout (simulated)",
+    "simulatorBody": "Lemon Squeezy is not connected yet, so this simulates a successful payment. A test webhook is generated and processed exactly like a real one.",
+    "simulatorPay": "Pay {amount} (simulated)",
+    "simulatorCancel": "Cancel checkout",
+    "status": {
+      "on_trial": "Trial",
+      "active": "Active",
+      "paused": "Paused",
+      "past_due": "Payment overdue",
+      "unpaid": "Unpaid",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    }
+  },
+  "membership": {
+    "title": "My membership",
+    "none": "You don't have an active membership.",
+    "browse": "Browse memberships",
+    "plan": "Plan",
+    "status": "Status",
+    "renews": "Renews on",
+    "ends": "Ends on",
+    "daysLeft": "Days left",
+    "card": "Card on file",
+    "manage": "Manage billing",
+    "updateCard": "Update payment method",
+    "cancel": "Cancel membership",
+    "cancelConfirm": "Your access continues until the end of the paid period. Cancel?",
+    "resume": "Resume membership",
+    "manualNote": "This membership was set up at the front desk. To renew, visit the gym.",
+    "memberCard": "Member card",
+    "memberCardHint": "Show this QR at the front desk.",
+    "flipCard": "Flip card",
+    "graceNote": "Your last payment failed. Update your card to keep your access.",
+    "simulated": "Simulated test subscription — there is no Lemon Squeezy billing portal for it."
+  },
+  "shop": {
+    "eyebrow": "Supplement store",
+    "title": "Fuel the work.",
+    "subtitle": "Pick up at the gym or delivery inside Amman.",
+    "searchPlaceholder": "Search products",
+    "category": "Category",
+    "sort": "Sort",
+    "sortFeatured": "Featured",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortNew": "Newest",
+    "inStockOnly": "In stock only",
+    "categories": {
+      "protein": "Protein",
+      "creatine": "Creatine",
+      "pre_workout": "Pre-workout",
+      "amino_acids": "Amino acids",
+      "vitamins": "Vitamins",
+      "gainers": "Gainers",
+      "accessories": "Accessories"
+    },
+    "from": "From {price}",
+    "flavor": "Flavor",
+    "size": "Size",
+    "quantity": "Quantity",
+    "addToCart": "Add to cart",
+    "added": "Added to cart",
+    "outOfStock": "Out of stock",
+    "lowStock": "Only {count} left",
+    "inStock": "In stock",
+    "sku": "SKU",
+    "regulatory": "Registration no.",
+    "viewIn3d": "View in 3D",
+    "close3d": "Close viewer",
+    "dragHint": "Drag to rotate",
+    "noResults": "No products match your filters.",
+    "disclaimerTitle": "Supplement notice",
+    "disclaimer": "Supplements are not intended to diagnose, treat, cure or prevent any disease and are not a substitute for a varied diet. Consult your doctor before use, especially if you are pregnant, nursing, taking medication or have a medical condition. Keep out of reach of children.",
+    "demoNotice": "Demo products with placeholder names and prices.",
+    "modelLabel": "3D model of {name}"
+  },
+  "cart": {
+    "title": "Your cart",
+    "empty": "Your cart is empty.",
+    "continue": "Continue shopping",
+    "subtotal": "Subtotal",
+    "remove": "Remove",
+    "checkout": "Checkout",
+    "updated": "Cart updated",
+    "limited": "Quantity limited to available stock.",
+    "unavailable": "No longer available"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "fulfillment": "How do you want it?",
+    "pickup": "Pick up at the gym",
+    "pickupNote": "Free. We'll message you when it's ready.",
+    "delivery": "Delivery in Amman",
+    "deliveryNote": "Delivery fee {fee}",
+    "name": "Full name",
+    "phone": "Phone",
+    "address": "Address in Amman",
+    "notes": "Notes (optional)",
+    "payment": "Payment",
+    "payManualPickup": "Pay at the gym when you pick up",
+    "payManualDelivery": "Cash on delivery",
+    "payCard": "Pay by card (secure checkout)",
+    "delivery_fee": "Delivery",
+    "total": "Total",
+    "place": "Place order",
+    "placing": "Placing order…",
+    "signInToCheckout": "Sign in to complete your order",
+    "successTitle": "Order received",
+    "successBody": "Order {number} is confirmed. We'll contact you on {phone}.",
+    "viewOrders": "View my orders",
+    "cancelledTitle": "Checkout cancelled",
+    "cancelledBody": "No payment was taken. Your cart is still saved.",
+    "backToCart": "Back to cart",
+    "currencyNote": "Prices in Jordanian dinar. Card checkout currency is set by the payment provider.",
+    "errors": {
+      "empty": "Your cart is empty.",
+      "stock": "Some items are no longer available in that quantity.",
+      "address": "Please enter a delivery address.",
+      "invalid": "Please check the highlighted fields."
+    }
+  },
+  "order": {
+    "number": "Order",
+    "date": "Date",
+    "items": "Items",
+    "total": "Total",
+    "status": {
+      "pending": "Awaiting payment",
+      "paid": "Paid",
+      "pay_on_delivery": "Pay on delivery / pickup",
+      "processing": "Preparing",
+      "ready": "Ready",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
+    },
+    "fulfillment": {
+      "pickup": "Pickup",
+      "delivery": "Delivery"
+    }
+  },
+  "auth": {
+    "title": "Welcome back to the factory.",
+    "subtitle": "Sign in to join a membership, track orders and manage your account.",
+    "google": "Continue with Google",
+    "googleMissing": "Google sign-in isn't configured yet.",
+    "testMember": "Continue as test member",
+    "testAdmin": "Continue as test admin",
+    "testTitle": "Test accounts (build phase)",
+    "testNote": "Visible only while test mode is on. Disable with ENABLE_TEST_ACCOUNT=false.",
+    "error": "Sign-in failed. Please try again.",
+    "terms": "By continuing you agree to our {terms} and {privacy}."
+  },
+  "account": {
+    "title": "My account",
+    "overview": "Overview",
+    "membership": "Membership",
+    "orders": "Orders",
+    "settings": "Settings",
+    "hello": "Hi, {name}",
+    "noOrders": "No orders yet.",
+    "profile": "Profile",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "language": "Preferred language",
+    "deleteTitle": "Delete my data",
+    "deleteBody": "Request deletion of your account and personal data. Records we must keep by law (e.g. invoices) are retained.",
+    "deleteButton": "Request deletion",
+    "deleteRequested": "Deletion requested on {date}. Our team will process it."
+  },
+  "admin": {
+    "title": "Admin",
+    "nav": {
+      "dashboard": "Dashboard",
+      "subscriptions": "Memberships",
+      "members": "Members",
+      "orders": "Orders",
+      "products": "Products",
+      "plans": "Plans",
+      "checkin": "Check-in",
+      "webhooks": "Webhooks",
+      "audit": "Audit log"
+    },
+    "kpi": {
+      "active": "Active members",
+      "expiring7": "Ending in 7 days",
+      "pastDue": "Payment overdue",
+      "expired30": "Expired (30 days)",
+      "mrr": "Monthly recurring (est.)",
+      "openOrders": "Open orders",
+      "revenue30": "Revenue (30 days)",
+      "checkinsToday": "Check-ins today"
+    },
+    "expiringTitle": "Ending soon",
+    "expiringEmpty": "No memberships ending in the next 14 days.",
+    "recentOrders": "Recent orders",
+    "recentEvents": "Recent webhook events",
+    "member": "Member",
+    "plan": "Plan",
+    "interval": "Billing",
+    "provider": "Payment",
+    "status": "Status",
+    "start": "Started",
+    "end": "Ends / renews",
+    "daysLeft": "Days left",
+    "actions": "Actions",
+    "renewsIn": "Renews in {days}",
+    "endsIn": "Ends in {days}",
+    "graceIn": "Grace ends in {days}",
+    "trialIn": "Trial ends in {days}",
+    "ended": "Ended",
+    "filterStatus": "Status",
+    "filterWindow": "Ending within",
+    "anyTime": "Any time",
+    "searchMember": "Name, email or phone",
+    "exportCsv": "Export CSV",
+    "grant": "Add / extend membership",
+    "grantHint": "For members who pay at the front desk.",
+    "grantEmail": "Member email",
+    "grantName": "Member name (new members)",
+    "grantPhone": "Phone",
+    "grantStart": "Start date",
+    "grantSubmit": "Save membership",
+    "extend": "Extend",
+    "extendBy": "+{months} mo",
+    "cancelSub": "Cancel",
+    "role": "Role",
+    "joined": "Joined",
+    "membershipCol": "Membership",
+    "changeRole": "Change role",
+    "orderStatus": "Order status",
+    "updateStatus": "Update",
+    "customer": "Customer",
+    "newProduct": "New product",
+    "editProduct": "Edit product",
+    "stock": "Stock",
+    "price": "Price",
+    "active": "Active",
+    "featured": "Featured",
+    "labelPreview": "Label preview",
+    "productFields": {
+      "slug": "Slug (URL)",
+      "brand": "Brand",
+      "category": "Category",
+      "nameAr": "Name (Arabic)",
+      "nameEn": "Name (English)",
+      "descriptionAr": "Description (Arabic)",
+      "descriptionEn": "Description (English)",
+      "shape": "3D shape",
+      "labelColor": "Label colour",
+      "accentColor": "Accent colour",
+      "glbUrl": "GLB model URL (optional)",
+      "regulatoryRef": "Registration no. (e.g. JFDA)",
+      "variants": "Variants",
+      "sku": "SKU",
+      "flavorAr": "Flavor (AR)",
+      "flavorEn": "Flavor (EN)",
+      "size": "Size",
+      "priceMajor": "Price (JOD)",
+      "compareAtMajor": "Compare-at (JOD)",
+      "addVariant": "Add variant"
+    },
+    "planFields": {
+      "priceMonthly": "Monthly (JOD)",
+      "priceQuarterly": "Quarterly (JOD)",
+      "priceYearly": "Yearly (JOD)",
+      "features": "Benefits (one per line)",
+      "variantStatus": "Lemon Squeezy variants",
+      "variantMissing": "missing",
+      "variantSet": "set",
+      "taglineAr": "Tagline (Arabic)",
+      "taglineEn": "Tagline (English)"
+    },
+    "webhook": {
+      "event": "Event",
+      "received": "Received",
+      "processed": "Processed",
+      "error": "Error",
+      "attempts": "Attempts",
+      "retry": "Retry",
+      "ok": "OK",
+      "failed": "Failed"
+    },
+    "audit": {
+      "actor": "Actor",
+      "action": "Action",
+      "entity": "Entity",
+      "when": "When"
+    },
+    "checkin": {
+      "title": "Front-desk check-in",
+      "hint": "Scan the member's QR or type the code.",
+      "code": "Member code",
+      "check": "Check",
+      "scan": "Scan with camera",
+      "stopScan": "Stop camera",
+      "allowed": "Membership active — let them in",
+      "denied": "No active membership",
+      "unknown": "Code not recognised",
+      "noCamera": "Camera scanning isn't supported on this browser. Type the code instead."
+    },
+    "saved": "Saved",
+    "forbidden": "You don't have permission for this action.",
+    "providerManual": "Front desk",
+    "providerCard": "Card"
+  },
+  "legal": {
+    "draft": "DRAFT — this document must be reviewed by a qualified lawyer in Jordan before going live.",
+    "updated": "Last updated",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy",
+    "refunds": "Refund & cancellation policy",
+    "shipping": "Delivery & pickup policy"
+  },
+  "notFound": {
+    "title": "This page skipped leg day.",
+    "body": "We couldn't find what you were looking for.",
+    "home": "Back home"
+  }
+}

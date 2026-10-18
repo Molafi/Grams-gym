@@ -1,0 +1,197 @@
+@import "tailwindcss";
+
+/* ── Obsidian & Ember design tokens ──────────────────────────────────────── */
+@theme {
+  --color-bg: #07080a;
+  --color-surface: #0e1014;
+  --color-surface-2: #14171d;
+  --color-hairline: rgb(255 255 255 / 0.08);
+  --color-hairline-strong: rgb(255 255 255 / 0.14);
+  --color-ink: #f4f2ee;
+  --color-muted: #9aa0aa;
+  --color-ember: #ff7d09;
+  --color-ember-soft: #ff9b3d;
+  --color-ember-glow: rgb(255 125 9 / 0.35);
+  --color-navy: #0b2a4a;
+  --color-silver-hi: #e8eaed;
+  --color-silver-lo: #9ba1ab;
+  --color-success: #3ecf8e;
+  --color-warning: #f5b74e;
+  --color-danger: #ff5a52;
+
+  --font-display: var(--font-latin), var(--font-ar-display), system-ui, sans-serif;
+  --font-body: var(--font-latin), var(--font-ar-body), system-ui, sans-serif;
+
+  --radius-card: 24px;
+  --ease-weighty: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-sheen: sheen 2.4s var(--ease-weighty) infinite;
+  @keyframes sheen {
+    0% { background-position: -150% 0; }
+    100% { background-position: 250% 0; }
+  }
+}
+
+/* Arabic is first-class: Arabic fonts lead in RTL, and typographic rules differ. */
+:root {
+  color-scheme: dark;
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+html[lang="ar"] {
+  --font-display: var(--font-ar-display), var(--font-latin), system-ui, sans-serif;
+  --font-body: var(--font-ar-body), var(--font-latin), system-ui, sans-serif;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body);
+  line-height: 1.6;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+html[lang="ar"] body {
+  line-height: 1.85;
+  letter-spacing: 0 !important;
+}
+
+/* Headlines */
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+}
+html[lang="ar"] .display {
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+/* Small tracked uppercase eyebrows — Latin only by design. */
+.eyebrow {
+  font-family: var(--font-latin), system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+html[lang="ar"] .eyebrow { direction: ltr; unicode-bidi: isolate; }
+
+.tabular { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1, "lnum" 1; }
+
+/* Arabic must never be uppercased or tracked. */
+html[lang="ar"] :where(h1, h2, h3, h4, p, span, a, button, label, li) { text-transform: none; }
+
+/* Silver metal text (monogram, numbers) */
+.text-silver {
+  background: linear-gradient(180deg, var(--color-silver-hi) 0%, var(--color-silver-lo) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Hairline card with faint inner noise */
+.card {
+  position: relative;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-hairline);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.025), transparent 40%),
+    var(--color-surface);
+  isolation: isolate;
+}
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--grain);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.glass {
+  background: rgb(14 16 20 / 0.55);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--color-hairline);
+}
+
+/* Atmospheric navy spill (from the real gym wall) */
+.atmosphere {
+  background:
+    radial-gradient(60% 50% at 80% 10%, rgb(11 42 74 / 0.55), transparent 70%),
+    radial-gradient(40% 35% at 15% 85%, rgb(255 125 9 / 0.08), transparent 70%);
+}
+
+/* Focus — visible, on-brand */
+:focus-visible {
+  outline: 2px solid var(--color-ember);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+::selection { background: var(--color-ember); color: #07080a; }
+
+/* Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface-2) 0%, #1b1f27 50%, var(--color-surface-2) 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-sheen);
+  border-radius: 12px;
+}
+
+/* Masked reveal (driven by components/motion/Reveal) */
+.reveal-mask { overflow: hidden; display: block; }
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+
+/* Directional icons flip in RTL */
+[dir="rtl"] .flip-rtl { transform: scaleX(-1); }
+
+/* Custom cursor only on fine pointers */
+@media (pointer: coarse) { .cursor-dot { display: none !important; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Form controls */
+.field {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--color-hairline-strong);
+  background: var(--color-surface-2);
+  padding: 0.7rem 0.95rem;
+  color: var(--color-ink);
+  transition: border-color 0.3s var(--ease-weighty), box-shadow 0.3s var(--ease-weighty);
+}
+.field:focus { outline: none; border-color: var(--color-ember); box-shadow: 0 0 0 3px rgb(255 125 9 / 0.18); }
+.field::placeholder { color: rgb(154 160 170 / 0.7); }
+select.field { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--color-muted) 50%), linear-gradient(135deg, var(--color-muted) 50%, transparent 50%); background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-inline-end: 2.2rem; }
+[dir="rtl"] select.field { background-position: 18px 55%, 13px 55%; }
+
+/* Tables (admin) */
+.table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
+.table th { text-align: start; font-weight: 500; color: var(--color-muted); padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-hairline); white-space: nowrap; }
+.table td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--color-hairline); vertical-align: middle; }
+.table tr:hover td { background: rgb(255 255 255 / 0.015); }
