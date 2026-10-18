@@ -41,7 +41,7 @@ export default async function AdminSubscriptionsPage({ params, searchParams }: P
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl">{t("nav.subscriptions")}</h1>
-        <a href={`/api/admin/export?${exportQuery}`} className="inline-flex h-10 items-center gap-2 rounded-full border border-hairline-strong px-4 text-sm">
+        <a href={`/api/admin/export?${exportQuery}`} download className="inline-flex h-10 items-center gap-2 rounded-full border border-hairline-strong px-4 text-sm">
           <Download className="h-4 w-4" aria-hidden /> {t("exportCsv")}
         </a>
       </div>
