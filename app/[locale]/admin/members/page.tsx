@@ -39,7 +39,6 @@ export default async function AdminMembersPage({ params, searchParams }: PagePro
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl">{t("nav.members")}</h1>
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- CSV file download from an API route, not page navigation */}
         <a href="/api/admin/export?type=members" download className="inline-flex h-10 items-center gap-2 rounded-full border border-hairline-strong px-4 text-sm">
           <Download className="h-4 w-4" aria-hidden /> {t("exportCsv")}
         </a>
