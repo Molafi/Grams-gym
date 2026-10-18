@@ -422,7 +422,7 @@
     "testTitle": "Test accounts (build phase)",
     "testNote": "Visible only while test mode is on. Disable with ENABLE_TEST_ACCOUNT=false.",
     "error": "Sign-in failed. Please try again.",
-    "terms": "By continuing you agree to our {terms} and {privacy}."
+    "terms": "By continuing you agree to our <terms>Terms of service</terms> and <privacy>Privacy policy</privacy>."
   },
   "account": {
     "title": "My account",

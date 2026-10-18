@@ -20,13 +20,11 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    uid?: string;
-    role?: Role;
-    isTestAccount?: boolean;
-  }
-}
+// No `declare module "next-auth/jwt"` augmentation: it doesn't resolve in next-auth v5 beta
+// (TS2664). Custom token fields are narrowed explicitly in the callbacks below instead.
+const tokenString = (v: unknown) => (typeof v === "string" ? v : undefined);
+const ROLES: readonly Role[] = ["MEMBER", "STAFF", "ADMIN"];
+const tokenRole = (v: unknown) => (ROLES.includes(v as Role) ? (v as Role) : undefined);
 
 function safeEqual(a: string, b: string) {
   const ab = Buffer.from(a);
@@ -91,7 +89,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/ar/signin", error: "/ar/signin" },
   callbacks: {
     async jwt({ token, user }) {
-      const uid = user?.id ?? token.uid ?? token.sub;
+      const uid = user?.id ?? tokenString(token.uid) ?? token.sub;
       if (uid) {
         // Refresh role on every token evaluation so role changes / revocations apply quickly.
         const dbUser = await db.user.findUnique({ where: { id: uid }, select: { id: true, role: true, isTestAccount: true } });
@@ -105,9 +103,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (token.uid && token.role) {
-        session.user.id = token.uid;
-        session.user.role = token.role;
+      const uid = tokenString(token.uid);
+      const role = tokenRole(token.role);
+      if (uid && role) {
+        session.user.id = uid;
+        session.user.role = role;
         session.user.isTestAccount = Boolean(token.isTestAccount);
       }
       return session;

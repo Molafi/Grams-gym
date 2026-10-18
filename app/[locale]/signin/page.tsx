@@ -37,7 +37,6 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
   }
 
   const t = await getTranslations({ locale, namespace: "auth" });
-  const tl = await getTranslations({ locale, namespace: "legal" });
   const tc = await getTranslations({ locale, namespace: "common" });
 
   return (
@@ -92,14 +91,14 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
 
           <p className="mt-8 text-center text-xs text-muted">
             {t.rich("terms", {
-              terms: (
+              terms: (chunks) => (
                 <Link href="/legal/terms" className="underline underline-offset-4">
-                  {tl("terms")}
+                  {chunks}
                 </Link>
               ),
-              privacy: (
+              privacy: (chunks) => (
                 <Link href="/legal/privacy" className="underline underline-offset-4">
-                  {tl("privacy")}
+                  {chunks}
                 </Link>
               ),
             })}
