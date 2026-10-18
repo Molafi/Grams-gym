@@ -2,7 +2,7 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { Download, Search } from "lucide-react";
 import type { SubscriptionStatus } from "@prisma/client";
 import { firstParam, type PageProps } from "@/lib/metadata";
-import { getSessionUser, hasRole } from "@/lib/auth/guards";
+import { hasRole, requireRole } from "@/lib/auth/guards";
 import { SUBSCRIPTION_STATUSES } from "@/lib/membership";
 import { Badge, Card } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
@@ -20,13 +20,14 @@ const WINDOWS = [3, 7, 14, 30];
 export default async function AdminSubscriptionsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Each admin page checks the role itself; the layout check alone is not an auth boundary.
+  const me = await requireRole(locale, "STAFF", `/${locale}/admin/subscriptions`);
   const sp = await searchParams;
   const t = await getTranslations({ locale, namespace: "admin" });
   const tb = await getTranslations({ locale, namespace: "billing" });
   const tp = await getTranslations({ locale, namespace: "packages" });
   const tc = await getTranslations({ locale, namespace: "common" });
   const f = await getFormatter({ locale });
-  const me = await getSessionUser();
 
   const q = firstParam(sp.q) ?? "";
   const statusRaw = firstParam(sp.status);

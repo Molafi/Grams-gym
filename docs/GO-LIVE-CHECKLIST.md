@@ -3,10 +3,12 @@
 ## Switches
 - [ ] `ENABLE_TEST_ACCOUNT=false` — **this one switch removes test login everywhere**: the buttons, the Credentials
       provider, the TEST MODE ribbon and the payment simulator. Existing test-account sessions stop working on their
-      next request.
+      next request, and memberships created by the simulator stop granting access.
 - [ ] `ALLOW_TEST_ACCOUNT_IN_PROD=false`
-- [ ] `LEMONSQUEEZY_TEST_MODE=false`, live API key, live store, **live** variant IDs, live webhook + new secret
-- [ ] Decide `SUPPLEMENT_PAYMENT_MODE` (keep `manual` unless a card gateway has approved physical goods)
+- [ ] `LEMONSQUEEZY_TEST_MODE=false` (the default in production), live API key, live store, **live** variant IDs,
+      live webhook + new secret. Once live, test-mode webhooks are ignored and test-card memberships grant nothing.
+- [ ] Decide `SUPPLEMENT_PAYMENT_MODE` (keep `manual` unless a card gateway has approved physical goods). For
+      `lemonsqueezy`, set `LS_STORE_CURRENCY` and `LS_JOD_EXCHANGE_RATE` — orders are refused until the rate is set.
 - [ ] `NEXT_PUBLIC_SITE_URL` and `AUTH_URL` = production domain; fresh `AUTH_SECRET`
 
 ## Confirm with the owner (see OWNER-TODO.md)
@@ -20,7 +22,8 @@
 - [ ] High-resolution photos added (`config/media.ts`, `config/site.ts` coaches) and a vector logo
 
 ## Data
-- [ ] `npx prisma migrate deploy` on production; seed plans only (or edit seed to skip demo members/products)
+- [ ] Commit `prisma/migrations/` (created by your first `npx prisma migrate dev`), then `npx prisma migrate deploy`
+      on production; seed plans only (or edit seed to skip demo members/products)
 - [ ] Delete seeded test and demo users (`isTestAccount` / `isDemo`) from production
 - [ ] Promote the real owner account to ADMIN (sign in with Google once, then change the role in the DB or via
       another admin in `/admin/members`)

@@ -12,3 +12,7 @@ next-env.d.ts
 .env.*.local
 .DS_Store
 .vercel
+
+# Draco decoder, copied from node_modules/three on install (scripts/copy-draco.mjs)
+public/draco/*.js
+public/draco/*.wasm

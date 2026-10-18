@@ -33,9 +33,11 @@ export default async function AdminProductEditPage({ params }: PageProps<{ id: s
   const t = await getTranslations({ locale, namespace: "admin" });
 
   let initial = EMPTY;
+  let version = "new";
   if (id !== "new") {
     const p = await db.product.findUnique({ where: { id }, include: { variants: { where: { active: true }, orderBy: { priceMinor: "asc" } } } });
     if (!p) notFound();
+    version = p.updatedAt.toISOString();
     initial = {
       id: p.id,
       slug: p.slug,
@@ -70,7 +72,7 @@ export default async function AdminProductEditPage({ params }: PageProps<{ id: s
   return (
     <div className="space-y-8">
       <h1 className="display text-4xl">{id === "new" ? t("newProduct") : t("editProduct")}</h1>
-      <ProductForm initial={initial} />
+      <ProductForm initial={initial} version={version} />
     </div>
   );
 }

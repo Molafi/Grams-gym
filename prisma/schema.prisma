@@ -201,6 +201,8 @@ model Subscription {
   cardBrand              String?
   cardLastFour           String?
   testMode               Boolean            @default(false)
+  /// `updated_at` of the last Lemon Squeezy event applied; older events are skipped.
+  lsUpdatedAt            DateTime?
   /// Opaque code encoded in the member-card QR.
   memberCode             String             @unique @default(cuid())
   notes                  String?
@@ -361,6 +363,9 @@ model Payment {
   currency       String
   orderId        String?
   subscriptionId String?
+  /// Lemon Squeezy subscription id from the invoice, so an invoice that arrives before its
+  /// subscription can be linked once the subscription is stored.
+  lsSubscriptionId String?
   raw            Json?
   createdAt      DateTime          @default(now())
 
@@ -369,6 +374,7 @@ model Payment {
 
   @@unique([provider, providerRef])
   @@index([createdAt])
+  @@index([lsSubscriptionId])
 }
 
 // ─── Ops ────────────────────────────────────────────────────────────────────

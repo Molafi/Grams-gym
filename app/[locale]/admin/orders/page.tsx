@@ -7,6 +7,8 @@ import { formatMoney } from "@/lib/money";
 import { Badge, Card } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
 import { updateOrderStatus } from "@/features/admin/actions";
+import { CLOSED_STATUSES, isClosed } from "@/lib/orders";
+import { requireRole } from "@/lib/auth/guards";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,8 @@ const STATUSES: OrderStatus[] = ["pending", "paid", "pay_on_delivery", "processi
 export default async function AdminOrdersPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Each admin page checks the role itself; the layout check alone is not an auth boundary.
+  await requireRole(locale, "STAFF", `/${locale}/admin/orders`);
   const statusRaw = firstParam((await searchParams).status);
   const status = STATUSES.find((s) => s === statusRaw);
   const t = await getTranslations({ locale, namespace: "admin" });
@@ -102,7 +106,8 @@ export default async function AdminOrdersPage({ params, searchParams }: PageProp
                       <input type="hidden" name="id" value={o.id} />
                       <input type="hidden" name="locale" value={locale} />
                       <select name="status" defaultValue={o.status} className="field !w-auto !py-1.5 text-xs" aria-label={t("orderStatus")}>
-                        {STATUSES.map((s) => (
+                        {/* Cancelled/refunded orders have had their stock returned and can't be reopened. */}
+                        {(isClosed(o.status) ? CLOSED_STATUSES : STATUSES).map((s) => (
                           <option key={s} value={s}>
                             {to(`status.${s}`)}
                           </option>

@@ -7,12 +7,15 @@ import { Badge, Card } from "@/components/ui/primitives";
 import { DaysLeft } from "@/components/admin/DaysLeft";
 import { Link } from "@/lib/i18n/navigation";
 import { dashboardStats } from "@/features/admin/queries";
+import { requireRole } from "@/lib/auth/guards";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Each admin page checks the role itself; the layout check alone is not an auth boundary.
+  await requireRole(locale, "STAFF", `/${locale}/admin`);
   const t = await getTranslations({ locale, namespace: "admin" });
   const to = await getTranslations({ locale, namespace: "order" });
   const f = await getFormatter({ locale });

@@ -3,7 +3,7 @@
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/lib/auth/auth";
-import { env, googleEnabled, testAccountsEnabled } from "@/lib/env";
+import { env, googleEnabled, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 
 function safeCallback(raw: FormDataEntryValue | null, locale: string) {
@@ -40,6 +40,7 @@ export async function signInAsTestAccount(formData: FormData) {
     throw e;
   }
   const kind = formData.get("kind") === "admin" ? "admin" : "member";
+  if (kind === "admin" && !testAdminEnabled) redirect(`/${locale}/signin?error=testConfig`);
   const email = kind === "admin" ? env.TEST_ADMIN_EMAIL : env.TEST_MEMBER_EMAIL;
   const password = kind === "admin" ? env.TEST_ADMIN_PASSWORD : env.TEST_MEMBER_PASSWORD;
   if (!email || !password) redirect(`/${locale}/signin?error=testConfig`);

@@ -16,9 +16,23 @@ import { getActivePlans } from "@/features/billing/membership";
 import { featuredProducts } from "@/features/shop/catalog";
 import { Link } from "@/lib/i18n/navigation";
 
+/**
+ * The home page is the shop window: if the database is unreachable, skip the
+ * data-driven sections (and log) instead of taking the whole page down.
+ */
+async function orEmpty<T>(what: string, load: () => Promise<T[]>): Promise<T[]> {
+  try {
+    return await load();
+  } catch (e) {
+    console.error(`[home] could not load ${what}; hiding the section`, e instanceof Error ? e.message : e);
+    return [];
+  }
+}
+
 export async function PackagesPreview({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: "home.packages" });
-  const plans = await getActivePlans();
+  const plans = await orEmpty("plans", getActivePlans);
+  if (plans.length === 0) return null;
   return (
     <section className="py-32" aria-labelledby="packages-title">
       <Container>
@@ -32,7 +46,7 @@ export async function PackagesPreview({ locale }: { locale: string }) {
 export async function ShopHighlights({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: "home.shop" });
   const tc = await getTranslations({ locale, namespace: "common" });
-  const products = await featuredProducts(4);
+  const products = await orEmpty("featured products", () => featuredProducts(4));
   if (products.length === 0) return null;
   return (
     <section className="py-32" aria-labelledby="shop-title">

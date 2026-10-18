@@ -16,7 +16,7 @@ export async function MembershipSummary({ sub, active, remaining, locale }: { su
   const tp = await getTranslations({ locale, namespace: "packages" });
   const tc = await getTranslations({ locale, namespace: "common" });
   const f = await getFormatter({ locale });
-  const dateLabel = remaining.kind === "renews" ? t("renews") : t("ends");
+  const dateLabel = remaining.kind === "renews" ? t("renews") : remaining.kind === "starts" ? t("starts") : t("ends");
 
   return (
     <dl className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
