@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { site } from "@/config/site";
+import { logOptionalReadFailure } from "@/lib/db-status";
 
 /**
  * Business facts editable in /admin/content → "Business info".
@@ -53,7 +54,7 @@ export const getBusiness = cache(async (): Promise<Business> => {
   try {
     for (const r of await db.siteSetting.findMany()) if (Object.hasOwn(v, r.key) && r.value.trim()) v[r.key] = r.value;
   } catch (e) {
-    console.error("[business] could not load settings; using defaults", e instanceof Error ? e.message : e);
+    logOptionalReadFailure("business info", e);
   }
   return {
     phone: { display: v.phoneDisplay!, e164: toE164(v.phoneDisplay!) },

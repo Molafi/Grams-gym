@@ -3,6 +3,7 @@ import { hasLocale } from "next-intl";
 import { routing } from "./routing";
 import { db } from "@/lib/db";
 import { applyOverrides } from "@/lib/content-keys";
+import { logOptionalReadFailure } from "@/lib/db-status";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
@@ -15,7 +16,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     const overrides = await db.contentOverride.findMany({ where: { locale }, select: { key: true, value: true } });
     if (overrides.length) messages = applyOverrides(defaults, overrides);
   } catch (e) {
-    console.error("[i18n] could not load text edits; using defaults", e instanceof Error ? e.message : e);
+    logOptionalReadFailure("text edits", e);
   }
 
   return { locale, messages, timeZone: "Asia/Amman" };

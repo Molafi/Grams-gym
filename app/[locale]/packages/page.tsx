@@ -6,6 +6,8 @@ import { Badge, Container, SectionHeading } from "@/components/ui/primitives";
 import { JoinButton, PlanCards } from "@/features/billing/PlanCards";
 import { toPlanCard } from "@/features/billing/plan-data";
 import { describe, getActivePlans, getAddons, getCurrentSubscription } from "@/features/billing/membership";
+import { nullIfDbDown } from "@/lib/db-status";
+import { Unavailable } from "@/components/ui/Unavailable";
 
 export async function generateMetadata({ params }: PageProps) {
   const { locale } = await params;
@@ -19,7 +21,18 @@ export default async function PackagesPage({ params, searchParams }: PageProps) 
   setRequestLocale(locale);
   const sp = await searchParams;
   const t = await getTranslations({ locale, namespace: "packages" });
-  const [plans, addons, user] = await Promise.all([getActivePlans(), getAddons(), getSessionUser()]);
+  const data = await Promise.all([getActivePlans(), getAddons(), getSessionUser()]).catch(nullIfDbDown("memberships page"));
+  if (!data) {
+    return (
+      <section className="atmosphere pb-10 pt-40">
+        <Container>
+          <SectionHeading as="h1" eyebrow={t("eyebrow")} title={t("title")} subtitle={t("subtitle")} className="mx-auto text-center [&_.eyebrow]:justify-center [&_p]:mx-auto" />
+        </Container>
+        <Unavailable locale={locale} />
+      </section>
+    );
+  }
+  const [plans, addons, user] = data;
   const current = user ? await getCurrentSubscription(user.id) : null;
   const currentSlug = current && describe(current).active ? current.plan.slug : null;
 

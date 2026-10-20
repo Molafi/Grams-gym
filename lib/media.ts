@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { media, type MediaItem, type MediaKey } from "@/config/media";
+import { logOptionalReadFailure } from "@/lib/db-status";
 
 export type ResolvedMedia = Record<MediaKey, MediaItem & { custom: boolean }>;
 
@@ -27,7 +28,7 @@ export const getMedia = cache(async (): Promise<ResolvedMedia> => {
       };
     }
   } catch (e) {
-    console.error("[media] could not load uploads; using defaults", e instanceof Error ? e.message : e);
+    logOptionalReadFailure("images", e);
   }
   return out;
 });

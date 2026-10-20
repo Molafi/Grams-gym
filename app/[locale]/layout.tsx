@@ -21,6 +21,7 @@ import { localBusinessJsonLd } from "@/lib/seo";
 import { getMedia } from "@/lib/media";
 import { getBusiness } from "@/lib/business";
 import "../globals.css";
+import { logOptionalReadFailure } from "@/lib/db-status";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -68,7 +69,8 @@ async function paletteProducts() {
       take: 100,
       orderBy: { featured: "desc" },
     });
-  } catch {
+  } catch (e) {
+    logOptionalReadFailure("search palette", e);
     return []; // the shell must render even if the DB is unreachable
   }
 }

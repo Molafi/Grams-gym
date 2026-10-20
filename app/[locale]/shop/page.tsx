@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Reveal } from "@/components/motion/Reveal";
 import { Link } from "@/lib/i18n/navigation";
+import { nullIfDbDown } from "@/lib/db-status";
+import { Unavailable } from "@/components/ui/Unavailable";
 
 export async function generateMetadata({ params }: PageProps) {
   const { locale } = await params;
@@ -30,7 +32,17 @@ export default async function ShopPage({ params, searchParams }: PageProps) {
   const sort = SORTS.find((s) => s === sortRaw) ?? "featured";
   const inStock = firstParam(sp.stock) === "1";
 
-  const products = await listProducts({ q, category, sort, inStock });
+  const products = await listProducts({ q, category, sort, inStock }).catch(nullIfDbDown("store"));
+  if (!products) {
+    return (
+      <section className="atmosphere pb-12 pt-40">
+        <Container>
+          <SectionHeading as="h1" eyebrow={t("eyebrow")} title={t("title")} subtitle={t("subtitle")} />
+        </Container>
+        <Unavailable locale={locale} />
+      </section>
+    );
+  }
   const hasDemo = products.some((p) => p.isDemo);
   const sortLabel: Record<SortKey, string> = {
     featured: t("sortFeatured"),

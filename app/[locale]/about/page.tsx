@@ -45,7 +45,7 @@ export default async function AboutPage({ params }: PageProps) {
             </div>
           </div>
           <RevealImage className="aspect-[4/5] rounded-[28px] border border-hairline">
-            <Photo item={media.gymInterior} locale={locale} className="h-full w-full grayscale" priority pendingLabel={tc("photoPending")} />
+            <Photo item={media.gymInterior} locale={locale} className="h-full w-full grayscale transition-[filter] duration-700 hover:grayscale-0 [@media(hover:none)]:grayscale-0" priority pendingLabel={tc("photoPending")} />
           </RevealImage>
         </Container>
       </section>

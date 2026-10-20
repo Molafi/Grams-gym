@@ -16,6 +16,7 @@ import { toPlanCard } from "@/features/billing/plan-data";
 import { getActivePlans } from "@/features/billing/membership";
 import { featuredProducts } from "@/features/shop/catalog";
 import { Link } from "@/lib/i18n/navigation";
+import { logOptionalReadFailure } from "@/lib/db-status";
 
 /**
  * The home page is the shop window: if the database is unreachable, skip the
@@ -25,7 +26,7 @@ async function orEmpty<T>(what: string, load: () => Promise<T[]>): Promise<T[]> 
   try {
     return await load();
   } catch (e) {
-    console.error(`[home] could not load ${what}; hiding the section`, e instanceof Error ? e.message : e);
+    logOptionalReadFailure(`home ${what}`, e);
     return [];
   }
 }
@@ -115,15 +116,16 @@ export async function CoachesGrid({ locale, withHeading = true }: { locale: stri
           {site.coaches.map((c, i) => (
             <Reveal as="li" key={c.key} index={i}>
               <TiltCard className="card overflow-hidden">
-                <div className="relative aspect-[3/4] bg-[radial-gradient(90%_70%_at_50%_20%,#1c2029,#07080a)]">
+                {/* Black & white until hovered (colour by default on touch screens, which can't hover). */}
+                <div className="group relative aspect-[3/4] overflow-hidden bg-[radial-gradient(90%_70%_at_50%_20%,#1c2029,#07080a)]">
                   {coachPhoto[c.key].src ? (
-                    <Image src={coachPhoto[c.key].src!} alt={tc(c.key)} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover grayscale transition-[filter] duration-700 hover:grayscale-0" />
+                    <Image src={coachPhoto[c.key].src!} alt={tc(c.key)} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover grayscale transition-[filter,transform] duration-700 group-hover:scale-[1.04] group-hover:grayscale-0 [@media(hover:none)]:grayscale-0" />
                   ) : (
                     <div role="img" aria-label={tc(c.key)} className="absolute inset-0 flex items-center justify-center">
                       <GGMark className="w-1/2 opacity-15" title="" />
                     </div>
                   )}
-                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
+                  <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
                 </div>
                 <div className="p-5">
                   <h3 className="font-medium">{tc(c.key)}</h3>
