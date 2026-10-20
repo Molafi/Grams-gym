@@ -53,7 +53,6 @@ export const site = {
   ],
   // Coach photos are image slots in config/media.ts (coachAhmad…), editable in /admin/media.
   coaches: [{ key: "ahmad" }, { key: "amr" }, { key: "simon" }, { key: "zaid" }],
-  credit: { label: "SAY AI AGENCY" },
   currency: "JOD",
 } as const;
 

@@ -30,4 +30,3 @@ account is needed: a payment simulator stands in for checkout until real keys ar
 - [docs/OWNER-TODO.md](docs/OWNER-TODO.md) — every placeholder, missing asset, the hours conflict, the payment approval risk
 - [docs/REPORT.md](docs/REPORT.md) — what's real, what's mocked, known limitations, verification status
 
-Footer credit: SAY AI AGENCY.

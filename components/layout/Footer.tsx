@@ -93,12 +93,9 @@ export async function Footer({ locale }: { locale: string }) {
         </div>
       </Container>
       <div className="border-t border-hairline">
-        <Container className="flex flex-col items-center justify-between gap-3 py-6 text-xs text-muted sm:flex-row">
+        <Container className="py-6 text-center text-xs text-muted">
           <p>
             © {year} GRAMS GYM. {t("rights")}
-          </p>
-          <p>
-            {t("credit")} <span className="font-semibold tracking-[0.18em] text-ink" dir="ltr">{site.credit.label}</span>
           </p>
         </Container>
       </div>
