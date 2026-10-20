@@ -1,15 +1,22 @@
 # Setup
 
-## 1. Local (testing mode — no Lemon Squeezy needed)
+## 1. Local (testing mode: no Docker, no Lemon Squeezy needed)
+
+Two terminals, both in the project folder:
 
 ```bash
-cp .env.example .env          # defaults are fine for local testing
+# Terminal 1: the database. Keep it open while you work.
+npm run db:local              # local Postgres (Prisma), prints its DATABASE_URL
+
+# Terminal 2
+cp .env.example .env          # its DATABASE_URL already matches `npm run db:local`
 npm install                   # also runs `prisma generate`
-npm run db:up                 # Postgres 16 in Docker (docker-compose.yml)
-npx prisma migrate dev --name init   # creates prisma/migrations/ and the tables
-npm run db:seed               # plans, test users, 12 demo products, 8 demo members
-npm run dev                   # http://localhost:3000  → redirects to /ar
+npm run db:setup              # creates the tables + plans, test users, demo products/members
+npm run dev                   # http://localhost:3000, redirects to /ar
 ```
+
+Prefer Docker? `npm run db:up` starts Postgres from docker-compose.yml; set `DATABASE_URL` to the Docker address
+noted in `.env.example`.
 
 Then:
 - `/ar/signin` → **Continue as test member** or **Continue as test admin** (TEST MODE ribbon is visible).

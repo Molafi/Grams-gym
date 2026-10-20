@@ -6,10 +6,11 @@ admin dashboard that shows every member's **days left**.
 
 ## Quick start (testing mode)
 ```bash
+npm run db:local   # terminal 1: local database, keep it open
 cp .env.example .env
 npm install
-npm run db:up && npx prisma migrate dev --name init && npm run db:seed
-npm run dev   # → http://localhost:3000/ar
+npm run db:setup   # tables + demo data
+npm run dev        # → http://localhost:3000/ar
 ```
 Sign in at `/ar/signin` with **Continue as test member** / **Continue as test admin**. No Lemon Squeezy
 account is needed: a payment simulator stands in for checkout until real keys are added.
