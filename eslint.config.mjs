@@ -18,5 +18,7 @@ export default defineConfig([
     "playwright-report/**",
     "test-results/**",
     "scripts/**",
+    // Third-party Draco decoder, copied from node_modules/three on install.
+    "public/draco/**",
   ]),
 ]);

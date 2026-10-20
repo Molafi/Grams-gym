@@ -2,7 +2,7 @@
   "name": "grams-gym-web",
   "version": "1.0.0",
   "private": true,
-  "description": "GRAMS GYM — premium bilingual (AR/EN) gym platform: 3D site, memberships, supplement shop, admin.",
+  "description": "GRAMS GYM \u2014 premium bilingual (AR/EN) gym platform: 3D site, memberships, supplement shop, admin.",
   "engines": {
     "node": ">=20.9"
   },
@@ -62,5 +62,14 @@
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
+  },
+  "allowScripts": {
+    "@swc/core@1.16.18": true,
+    "@prisma/client@6.16.3": true,
+    "prisma@6.16.3": true,
+    "@prisma/engines@6.16.3": true,
+    "esbuild@0.28.2": true,
+    "unrs-resolver@1.12.2": true,
+    "@parcel/watcher@2.6.0": true
   }
 }
