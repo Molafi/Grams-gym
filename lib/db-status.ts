@@ -1,14 +1,32 @@
 import "server-only";
 import { Prisma } from "@prisma/client";
 
-/** True when the error means "can't reach the database" (not a bug in a query). */
-export function isDbUnavailable(e: unknown): boolean {
-  if (e instanceof Prisma.PrismaClientInitializationError) return true;
-  if (e instanceof Prisma.PrismaClientKnownRequestError) return ["P1001", "P1002", "P1008", "P1017"].includes(e.code);
+type DbProblem = "down" | "notSetUp";
+
+/** "down" = can't reach the database; "notSetUp" = reachable but tables/columns missing. */
+function dbProblem(e: unknown): DbProblem | null {
+  if (e instanceof Prisma.PrismaClientInitializationError) return "down";
+  if (e instanceof Prisma.PrismaClientKnownRequestError) {
+    if (["P1001", "P1002", "P1008", "P1017"].includes(e.code)) return "down";
+    // P2021: table doesn't exist · P2022: column doesn't exist → `npm run db:setup` not run (or outdated).
+    if (e.code === "P2021" || e.code === "P2022") return "notSetUp";
+  }
   // Auth.js wraps errors thrown in `authorize` (CallbackRouteError → cause.err).
   const cause = (e as { cause?: { err?: unknown } } | null)?.cause;
-  return cause?.err !== undefined && cause.err !== e ? isDbUnavailable(cause.err) : false;
+  return cause?.err !== undefined && cause.err !== e ? dbProblem(cause.err) : null;
 }
+
+let lastProblem: DbProblem = "down";
+
+/** True when the database can't be used (down, or not set up yet) — not a bug in a query. */
+export function isDbUnavailable(e: unknown): boolean {
+  const p = dbProblem(e);
+  if (p) lastProblem = p;
+  return p !== null;
+}
+
+/** Short developer hint for the current database problem. */
+export const dbHint = () => (lastProblem === "notSetUp" ? "tables missing → npm run db:setup" : `no database at ${dbTarget()} → npm run db:check`);
 
 /*
  * Circuit breaker. Every failed connection attempt waits for a timeout (seconds). Once one
@@ -39,7 +57,9 @@ export function markDbDown(where: string) {
   if (now - lastWarning < 60_000) return;
   lastWarning = now;
   console.warn(
-    `[db] Can't reach the database at ${dbTarget()} (${where}). Is \`npm run db:local\` running, and does DATABASE_URL in .env match the address it prints? Run \`npm run db:check\`.`,
+    lastProblem === "notSetUp"
+      ? `[db] The database has no tables yet (${where}). Stop the dev server and run \`npm run db:setup\`.`
+      : `[db] Can't reach the database at ${dbTarget()} (${where}). Is \`npm run db:local\` running, and does DATABASE_URL in .env match the address it prints? Run \`npm run db:check\`.`,
   );
 }
 
