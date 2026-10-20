@@ -31,8 +31,18 @@ const schema = z.object({
   LEMONSQUEEZY_API_KEY: opt,
   LEMONSQUEEZY_STORE_ID: opt,
   LEMONSQUEEZY_WEBHOOK_SECRET: opt,
-  LEMONSQUEEZY_TEST_MODE: flag(true),
+  // Fails closed: defaults to live mode in production so a forgotten variable can't let
+  // anyone buy a membership with a test card.
+  LEMONSQUEEZY_TEST_MODE: flag(process.env.NODE_ENV !== "production"),
   LS_VARIANT_SUPPLEMENT_ORDER: opt,
+  /** Currency of the Lemon Squeezy store (custom prices are sent in its minor units). */
+  LS_STORE_CURRENCY: opt
+    .transform((v) => (v ?? "USD").toUpperCase())
+    .refine((v) => /^[A-Z]{3}$/.test(v), "must be a 3-letter currency code"),
+  /** Store-currency units per 1 JOD, e.g. 1.41 for USD. Required for LS supplement orders when the store isn't JOD. */
+  LS_JOD_EXCHANGE_RATE: opt
+    .transform((v) => (v === undefined ? undefined : Number(v)))
+    .refine((v) => v === undefined || (Number.isFinite(v) && v > 0), "must be a positive number"),
 
   SUPPLEMENT_PAYMENT_MODE: z.enum(["manual", "lemonsqueezy"]).default("manual"),
   MEMBERSHIP_GRACE_DAYS: z.coerce.number().int().min(0).max(30).default(3),
@@ -64,6 +74,18 @@ export const env = load();
 /** Single switch for the build-phase test accounts. */
 export const testAccountsEnabled =
   env.ENABLE_TEST_ACCOUNT && (env.NODE_ENV !== "production" || env.ALLOW_TEST_ACCOUNT_IN_PROD);
+
+/**
+ * The one-click *admin* test login is never offered in production, even with
+ * ALLOW_TEST_ACCOUNT_IN_PROD: anyone who can reach /signin would become ADMIN.
+ */
+export const testAdminEnabled = testAccountsEnabled && env.NODE_ENV !== "production";
+
+/**
+ * Whether memberships/orders created in test mode (payment simulator, LS test checkouts)
+ * still count. Once the site is live (test accounts off, LS live mode) they grant nothing.
+ */
+export const testDataAllowed = testAccountsEnabled || env.LEMONSQUEEZY_TEST_MODE;
 
 export const googleEnabled = Boolean(env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET);
 

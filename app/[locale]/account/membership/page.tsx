@@ -40,7 +40,7 @@ export default async function MembershipPage({ params, searchParams }: PageProps
   const qr = await QRCode.toDataURL(`GG:${sub.memberCode}`, { margin: 1, width: 320, color: { dark: "#07080A", light: "#F4F2EE" } });
   const isLs = sub.provider === "lemonsqueezy";
   const isSimulated = sub.lsSubscriptionId?.startsWith("sim_") ?? false;
-  const validLabel = state.remaining.at ? `${state.remaining.kind === "renews" ? t("renews") : t("ends")} ${f.dateTime(state.remaining.at, { dateStyle: "medium" })}` : "";
+  const validLabel = state.remaining.at ? `${state.remaining.kind === "renews" ? t("renews") : state.remaining.kind === "starts" ? t("starts") : t("ends")} ${f.dateTime(state.remaining.at, { dateStyle: "medium" })}` : "";
 
   return (
     <div className="space-y-6">

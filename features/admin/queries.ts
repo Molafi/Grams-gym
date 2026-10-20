@@ -1,8 +1,10 @@
 import "server-only";
 import type { Prisma, SubscriptionStatus } from "@prisma/client";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
-import { hasActiveMembership, membershipRemaining, urgency, type Remaining } from "@/lib/membership";
+import { site } from "@/config/site";
+import { expireStalePendingOrders } from "@/lib/orders";
+import { urgency, type Remaining } from "@/lib/membership";
+import { isMembershipActive, remainingFor } from "@/features/billing/membership";
 import { INTERVAL_MONTHS } from "@/config/plans";
 
 const subInclude = {
@@ -21,8 +23,8 @@ export type AdminSubscription = Prisma.SubscriptionGetPayload<{ include: typeof 
 const DAY = 86_400_000;
 
 function enrich(s: Prisma.SubscriptionGetPayload<{ include: typeof subInclude }>, now: Date): AdminSubscription {
-  const active = hasActiveMembership(s, now, env.MEMBERSHIP_GRACE_DAYS);
-  const remaining = membershipRemaining(s, now, env.MEMBERSHIP_GRACE_DAYS);
+  const active = isMembershipActive(s, now);
+  const remaining = remainingFor(s, now);
   const periodDays = INTERVAL_MONTHS[s.interval] * 30;
   return {
     ...s,
@@ -73,12 +75,15 @@ export async function dashboardStats() {
   const since30 = new Date(now.getTime() - 30 * DAY);
   const startOfDay = new Date(now);
   startOfDay.setHours(0, 0, 0, 0);
+  await expireStalePendingOrders(now).catch((e) => console.error("[admin] expiring stale orders failed", e));
 
   const [subs, openOrders, paidOrders30, payments30, checkinsToday, recentOrders, recentEvents] = await Promise.all([
     listSubscriptions(),
     db.order.count({ where: { status: { in: ["pending", "paid", "pay_on_delivery", "processing", "ready"] } } }),
-    db.order.aggregate({ _sum: { totalMinor: true }, where: { createdAt: { gte: since30 }, status: { in: ["paid", "completed", "ready", "processing"] } } }),
-    db.payment.aggregate({ _sum: { amountMinor: true }, where: { createdAt: { gte: since30 }, status: "succeeded", subscriptionId: { not: null } } }),
+    // Only amounts in the gym's currency are summed: Lemon Squeezy invoices are in the store
+    // currency (e.g. USD cents) and can't be added to JOD fils.
+    db.order.aggregate({ _sum: { totalMinor: true }, where: { createdAt: { gte: since30 }, currency: site.currency, status: { in: ["paid", "completed", "ready", "processing"] } } }),
+    db.payment.aggregate({ _sum: { amountMinor: true }, where: { createdAt: { gte: since30 }, currency: site.currency, status: "succeeded", subscriptionId: { not: null } } }),
     db.checkIn.count({ where: { createdAt: { gte: startOfDay }, allowed: true } }),
     db.order.findMany({ orderBy: { createdAt: "desc" }, take: 6, include: { user: { select: { name: true, email: true } } } }),
     db.webhookEvent.findMany({ orderBy: { createdAt: "desc" }, take: 6 }),
@@ -104,7 +109,8 @@ export async function dashboardStats() {
     activeCount: active.length,
     expiring7: active.filter((s) => s.remaining.kind !== "renews" && s.remaining.days <= 7).length,
     pastDue: current.filter((s) => s.status === "past_due").length,
-    expired30: current.filter((s) => !s.active && (s.endsAt ?? s.updatedAt) >= since30).length,
+    // Upcoming (future start) memberships are inactive but not expired.
+    expired30: current.filter((s) => !s.active && s.remaining.kind !== "starts" && (s.endsAt ?? s.updatedAt) >= since30).length,
     mrrMinor: mrr,
     openOrders,
     revenue30Minor: (paidOrders30._sum.totalMinor ?? 0) + (payments30._sum.amountMinor ?? 0),

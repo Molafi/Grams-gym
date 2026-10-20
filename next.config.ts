@@ -13,7 +13,8 @@ const isDev = process.env.NODE_ENV !== "production";
  */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://app.lemonsqueezy.com https://assets.lemonsqueezy.com`,
+  // 'wasm-unsafe-eval' lets the self-hosted Draco decoder (public/draco/) compile its WebAssembly.
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${isDev ? "'unsafe-eval'" : ""} https://app.lemonsqueezy.com https://assets.lemonsqueezy.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://lh3.googleusercontent.com",
   "font-src 'self' data:",

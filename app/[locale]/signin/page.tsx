@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { FlaskConical, ShieldCheck, UserRound } from "lucide-react";
 import { firstParam, pageMetadata, type PageProps } from "@/lib/metadata";
-import { googleEnabled, testAccountsEnabled } from "@/lib/env";
+import { googleEnabled, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
 import { getSessionUser } from "@/lib/auth/guards";
 import { redirect } from "@/lib/i18n/navigation";
 import { Container } from "@/components/ui/primitives";
@@ -37,7 +37,6 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
   }
 
   const t = await getTranslations({ locale, namespace: "auth" });
-  const tl = await getTranslations({ locale, namespace: "legal" });
   const tc = await getTranslations({ locale, namespace: "common" });
 
   return (
@@ -77,14 +76,16 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
                     <UserRound className="h-4 w-4" aria-hidden /> {t("testMember")}
                   </Button>
                 </form>
-                <form action={signInAsTestAccount}>
-                  <input type="hidden" name="locale" value={locale} />
-                  <input type="hidden" name="kind" value="admin" />
-                  <input type="hidden" name="callbackUrl" value={callbackUrl} />
-                  <Button type="submit" variant="glass" className="w-full" data-testid="test-admin-login">
-                    <ShieldCheck className="h-4 w-4" aria-hidden /> {t("testAdmin")}
-                  </Button>
-                </form>
+                {testAdminEnabled ? (
+                  <form action={signInAsTestAccount}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="kind" value="admin" />
+                    <input type="hidden" name="callbackUrl" value={callbackUrl} />
+                    <Button type="submit" variant="glass" className="w-full" data-testid="test-admin-login">
+                      <ShieldCheck className="h-4 w-4" aria-hidden /> {t("testAdmin")}
+                    </Button>
+                  </form>
+                ) : null}
               </div>
               <p className="mt-3 text-xs text-muted">{t("testNote")}</p>
             </div>
@@ -92,14 +93,14 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
 
           <p className="mt-8 text-center text-xs text-muted">
             {t.rich("terms", {
-              terms: (
+              terms: (chunks) => (
                 <Link href="/legal/terms" className="underline underline-offset-4">
-                  {tl("terms")}
+                  {chunks}
                 </Link>
               ),
-              privacy: (
+              privacy: (chunks) => (
                 <Link href="/legal/privacy" className="underline underline-offset-4">
-                  {tl("privacy")}
+                  {chunks}
                 </Link>
               ),
             })}

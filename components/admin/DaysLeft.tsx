@@ -27,7 +27,9 @@ export async function DaysLeft({
   const label =
     remaining.kind === "none"
       ? t("ended")
-      : remaining.kind === "renews"
+      : remaining.kind === "starts"
+        ? t("startsIn", { days })
+        : remaining.kind === "renews"
         ? t("renewsIn", { days })
         : remaining.kind === "grace"
           ? t("graceIn", { days })

@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { OrderStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
 import { assertRole } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
-import { addMonths, hasActiveMembership } from "@/lib/membership";
+import { addMonths } from "@/lib/membership";
+import { isMembershipActive, remainingFor } from "@/features/billing/membership";
 import { toMinor } from "@/lib/money";
 import { INTERVAL_MONTHS } from "@/config/plans";
 import { processStoredEvent } from "@/lib/payments/lemonsqueezy-events";
+import { closeOrder, isClosed } from "@/lib/orders";
 
 export type AdminState = { ok?: boolean; error?: string };
 
@@ -27,8 +28,10 @@ const grantSchema = z.object({
   interval: z.enum(["monthly", "quarterly", "yearly"]),
   start: z
     .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined))
+    .refine((d) => d === undefined || !Number.isNaN(d.getTime()), "invalid date"),
 });
 
 /**
@@ -58,7 +61,8 @@ export async function grantMembership(_prev: AdminState, fd: FormData): Promise<
 
   const now = new Date();
   const existing = (await db.subscription.findMany({ where: { userId: user.id, provider: "manual" }, orderBy: { endsAt: "desc" } })).find((s) =>
-    hasActiveMembership(s, now, env.MEMBERSHIP_GRACE_DAYS),
+    // Active now, or granted earlier with a start date still in the future.
+    isMembershipActive(s, now) || remainingFor(s, now).kind === "starts",
   );
   const months = INTERVAL_MONTHS[input.interval];
 
@@ -123,28 +127,29 @@ export async function changeRole(fd: FormData): Promise<void> {
 /* ─── Orders ─────────────────────────────────────────────────────────────── */
 
 const ORDER_STATUSES: OrderStatus[] = ["pending", "paid", "pay_on_delivery", "processing", "ready", "completed", "cancelled", "refunded"];
-const RESTOCK: OrderStatus[] = ["cancelled", "refunded"];
 
 export async function updateOrderStatus(fd: FormData): Promise<void> {
   const actor = await assertRole("STAFF");
   const id = String(fd.get("id"));
   const status = z.enum(ORDER_STATUSES as [OrderStatus, ...OrderStatus[]]).parse(fd.get("status"));
-  const order = await db.order.findUniqueOrThrow({ where: { id }, include: { items: true } });
+  const order = await db.order.findUniqueOrThrow({ where: { id }, select: { status: true, paymentMode: true } });
   if (order.status === status) return;
+  // A cancelled/refunded order has had its stock returned (possibly already resold).
+  // Reopening it would sell those units twice, so staff create a new order instead.
+  if (isClosed(order.status) && !isClosed(status)) throw new Error("Cancelled or refunded orders can't be reopened");
 
-  await db.$transaction(async (tx) => {
-    // Return stock once when an order is cancelled/refunded.
-    if (RESTOCK.includes(status) && !RESTOCK.includes(order.status)) {
-      for (const i of order.items) {
-        if (i.variantId) await tx.productVariant.update({ where: { id: i.variantId }, data: { stock: { increment: i.quantity } } });
-      }
-    }
-    await tx.order.update({ where: { id }, data: { status } });
-    if (order.paymentMode === "manual" && (status === "completed" || status === "paid")) {
+  const changed = await db.$transaction(async (tx) => {
+    // Both branches only apply if the order is still in the status we read, so a
+    // double-click or two staff members can't restock the same order twice.
+    const ok = isClosed(status)
+      ? await closeOrder(tx, id, order.status, status as "cancelled" | "refunded")
+      : (await tx.order.updateMany({ where: { id, status: order.status }, data: { status } })).count === 1;
+    if (ok && order.paymentMode === "manual" && (status === "completed" || status === "paid")) {
       await tx.payment.updateMany({ where: { orderId: id, provider: "manual" }, data: { status: "succeeded" } });
     }
+    return ok;
   });
-  await audit(actor.id, "order.status", "Order", id, { from: order.status, to: status });
+  if (changed) await audit(actor.id, "order.status", "Order", id, { from: order.status, to: status });
   revalidateAdmin(fd);
 }
 
@@ -160,6 +165,8 @@ const variantSchema = z.object({
   price: z.string().trim().min(1),
   compareAt: z.string().trim().optional(),
   stock: z.coerce.number().int().min(0).max(100000),
+  /** Stock value the form loaded (existing variants only). */
+  stockOrig: z.coerce.number().int().min(0).max(100000).optional(),
   active: z.boolean(),
 });
 
@@ -183,7 +190,8 @@ const productSchema = z.object({
     .string()
     .trim()
     .optional()
-    .refine((v) => !v || v.startsWith("/") || v.startsWith("https://"), "must be https or local"),
+    // Same-origin only (e.g. /models/whey.glb): the CSP's connect-src 'self' blocks other hosts.
+    .refine((v) => !v || (v.startsWith("/") && !v.startsWith("//") && v.toLowerCase().endsWith(".glb")), "must be a local /…glb path"),
   regulatoryRef: z.string().trim().max(60).optional(),
   featured: z.boolean(),
   active: z.boolean(),
@@ -204,6 +212,7 @@ function readVariants(fd: FormData) {
       price: fd.get(`v${i}_price`),
       compareAt: fd.get(`v${i}_compareAt`) || undefined,
       stock: fd.get(`v${i}_stock`),
+      stockOrig: fd.get(`v${i}_stockOrig`) ?? undefined,
       active: fd.get(`v${i}_active`) === "on",
     });
   }
@@ -260,13 +269,20 @@ export async function saveProduct(_prev: AdminState, fd: FormData): Promise<Admi
           sizeLabel: v.sizeLabel,
           priceMinor: m.price,
           compareAtMinor: m.compareAt,
-          stock: v.stock,
           active: v.active,
         };
-        const row = v.id
-          ? await tx.productVariant.update({ where: { id: v.id }, data: vData })
-          : await tx.productVariant.create({ data: { ...vData, productId: product.id } });
-        keep.push(row.id);
+        let rowId: string;
+        if (v.id) {
+          // Apply only the admin's change to stock (form value − loaded value) on top of the
+          // live number, so units sold while the form was open aren't overwritten.
+          const delta = v.stock - (v.stockOrig ?? v.stock);
+          const row = await tx.productVariant.update({ where: { id: v.id, productId: product.id }, data: { ...vData, stock: { increment: delta } } });
+          if (row.stock < 0) await tx.productVariant.update({ where: { id: row.id }, data: { stock: 0 } });
+          rowId = row.id;
+        } else {
+          rowId = (await tx.productVariant.create({ data: { ...vData, stock: v.stock, productId: product.id } })).id;
+        }
+        keep.push(rowId);
       }
       // Variants removed from the form are deactivated (kept for order history).
       await tx.productVariant.updateMany({ where: { productId: product.id, id: { notIn: keep } }, data: { active: false } });
@@ -361,6 +377,9 @@ export async function savePlan(_prev: AdminState, fd: FormData): Promise<AdminSt
 export async function retryWebhook(fd: FormData): Promise<void> {
   const actor = await assertRole("ADMIN");
   const id = String(fd.get("id"));
+  // Only failed events: re-applying one that already succeeded could roll state back.
+  const evt = await db.webhookEvent.findUniqueOrThrow({ where: { id }, select: { processedAt: true } });
+  if (evt.processedAt) return;
   const result = await processStoredEvent(id);
   await audit(actor.id, "webhook.retry", "WebhookEvent", id, { result: result.status });
   revalidateAdmin(fd);
@@ -386,7 +405,7 @@ export async function checkInMember(_prev: CheckInResult | null, fd: FormData): 
   // The member may have a newer membership than the one on an old card.
   const all = await db.subscription.findMany({ where: { userId: sub.userId }, include: { plan: true } });
   const now = new Date();
-  const best = all.find((s) => hasActiveMembership(s, now, env.MEMBERSHIP_GRACE_DAYS));
+  const best = all.find((s) => isMembershipActive(s, now));
   const allowed = Boolean(best);
   await db.checkIn.create({ data: { subscriptionId: (best ?? sub).id, userId: sub.userId, allowed, staffId: actor.id } });
   const shown = best ?? sub;

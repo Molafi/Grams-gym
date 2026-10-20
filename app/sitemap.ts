@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { site } from "@/config/site";
 import { db } from "@/lib/db";
 
+// Regenerate hourly at runtime so product URLs appear even when the build ran without a DB.
+export const revalidate = 3600;
+
 const STATIC = ["", "/packages", "/shop", "/about", "/services", "/facilities", "/contact", "/legal/terms", "/legal/privacy", "/legal/refunds", "/legal/shipping"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

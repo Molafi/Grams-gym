@@ -1,6 +1,5 @@
-Place the Draco decoder files here only if you upload compressed `.glb` product models
-(the `glbUrl` field). Copy them from `node_modules/three/examples/jsm/libs/draco/gltf/`:
+The Draco decoder for compressed `.glb` product models is copied here automatically on
+`npm install` (`scripts/copy-draco.mjs`, from `node_modules/three/examples/jsm/libs/draco/gltf/`).
+The files are git-ignored. Served locally so the Content-Security-Policy needs no third-party CDN.
 
-    cp node_modules/three/examples/jsm/libs/draco/gltf/* public/draco/
-
-They are served locally so the Content-Security-Policy does not need a third-party CDN.
+Put product models in `public/models/` and set the product's "3D model" field to e.g. `/models/whey.glb`.

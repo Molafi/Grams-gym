@@ -3,12 +3,14 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { env, testAccountsEnabled } from "@/lib/env";
+import { env, testDataAllowed } from "@/lib/env";
 import { getSessionUser } from "@/lib/auth/guards";
 import { lineTotal, sumMinor } from "@/lib/money";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { providerForOrders } from "@/lib/payments";
+import { toStoreMinor } from "@/lib/payments/currency";
 import { email, orderConfirmationEmail } from "@/lib/email";
+import { closeOrder, expireStalePendingOrders } from "@/lib/orders";
 import { priceLines } from "./catalog";
 
 export type CheckoutState = {
@@ -82,6 +84,9 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   }
   const input = parsed.data;
 
+  // Release stock held by abandoned online checkouts before pricing this one.
+  await expireStalePendingOrders().catch((e) => console.error("[checkout] expiring stale orders failed", e));
+
   const lines = await priceLines(input.items);
   if (lines.length === 0) return { error: "empty" };
   if (lines.some((l) => !l.available || l.qty < l.requestedQty)) return { error: "stock" };
@@ -91,6 +96,15 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const delivery = input.fulfillment === "delivery" ? env.DELIVERY_FEE_MINOR : 0;
   const total = subtotal + delivery;
   const provider = providerForOrders();
+  if (provider.id === "lemonsqueezy") {
+    // Fail before reserving stock if the order can't be priced in the store currency.
+    try {
+      toStoreMinor(total, currency);
+    } catch (e) {
+      console.error("[checkout] Lemon Squeezy pricing not configured", e);
+      return { error: "generic" };
+    }
+  }
 
   const created = await db
     .$transaction(async (tx) => {
@@ -117,7 +131,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
           deliveryMinor: delivery,
           totalMinor: total,
           currency,
-          testMode: testAccountsEnabled || env.LEMONSQUEEZY_TEST_MODE,
+          testMode: testDataAllowed,
           items: {
             create: lines.map((l) => ({
               variantId: l.variantId,
@@ -146,9 +160,6 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   }
   const order = created.order;
 
-  // Clear the server cart (client clears itself on the success page).
-  await db.cartItem.deleteMany({ where: { cart: { userId: user.id } } }).catch(() => undefined);
-
   let target: string;
   try {
     const result = await provider.createCheckout({
@@ -163,8 +174,16 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
         : `/${input.locale}/checkout/success?order=${encodeURIComponent(order.number)}`;
   } catch (e) {
     console.error("[checkout] provider failed", e);
+    // Don't leave the order holding stock: cancel it and put the units back. The cart is
+    // untouched, so the customer can simply try again.
+    await db
+      .$transaction((tx) => closeOrder(tx, order.id, "pending", "cancelled"))
+      .catch((err) => console.error("[checkout] could not release stock for", order.number, err));
     return { error: "generic" };
   }
+
+  // Only now that payment is set up: clear the server cart (the client clears itself on the success page).
+  await db.cartItem.deleteMany({ where: { cart: { userId: user.id } } }).catch(() => undefined);
 
   const msg = orderConfirmationEmail(order, input.locale);
   email.send({ to: user.email, ...msg }).catch((e) => console.error("[email] order confirmation failed", e));

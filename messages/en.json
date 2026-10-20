@@ -291,6 +291,7 @@
     "plan": "Plan",
     "status": "Status",
     "renews": "Renews on",
+    "starts": "Starts on",
     "ends": "Ends on",
     "daysLeft": "Days left",
     "card": "Card on file",
@@ -422,7 +423,7 @@
     "testTitle": "Test accounts (build phase)",
     "testNote": "Visible only while test mode is on. Disable with ENABLE_TEST_ACCOUNT=false.",
     "error": "Sign-in failed. Please try again.",
-    "terms": "By continuing you agree to our {terms} and {privacy}."
+    "terms": "By continuing you agree to our <terms>Terms of service</terms> and <privacy>Privacy policy</privacy>."
   },
   "account": {
     "title": "My account",
@@ -478,6 +479,7 @@
     "end": "Ends / renews",
     "daysLeft": "Days left",
     "actions": "Actions",
+    "startsIn": "Starts in {days}",
     "renewsIn": "Renews in {days}",
     "endsIn": "Ends in {days}",
     "graceIn": "Grace ends in {days}",
@@ -523,7 +525,7 @@
       "shape": "3D shape",
       "labelColor": "Label colour",
       "accentColor": "Accent colour",
-      "glbUrl": "GLB model URL (optional)",
+      "glbUrl": "3D model path (optional, e.g. /models/whey.glb)",
       "regulatoryRef": "Registration no. (e.g. JFDA)",
       "variants": "Variants",
       "sku": "SKU",

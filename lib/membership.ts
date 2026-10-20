@@ -19,17 +19,34 @@ export type MembershipLike = {
   endsAt: Date | null;
   trialEndsAt?: Date | null;
   pastDueSince?: Date | null;
+  /** Front-desk memberships may be granted with a future start date. */
+  startsAt?: Date | null;
+  /** Created by the payment simulator or a Lemon Squeezy test-mode checkout. */
+  testMode?: boolean;
+};
+
+export type AccessOptions = {
+  /** When false, test-mode memberships never grant access (live mode). Default true. */
+  allowTestMode?: boolean;
 };
 
 const DAY = 86_400_000;
 
-export function hasActiveMembership(sub: MembershipLike | null | undefined, now: Date, graceDays: number): boolean {
-  if (!sub) return false;
+/**
+ * Whether the membership is valid today, ignoring a future start date.
+ * Shared by `hasActiveMembership` (which also requires the start date to have passed)
+ * and `membershipRemaining` (which shows "starts in N days" for upcoming ones).
+ */
+function validIgnoringStart(sub: MembershipLike, now: Date, graceDays: number, opts: AccessOptions): boolean {
+  if (sub.testMode && opts.allowTestMode === false) return false;
   switch (sub.status) {
     case "active":
     case "on_trial":
       // Manual (pay-at-desk) memberships carry a hard end date.
-      if (sub.provider === "manual" && sub.endsAt) return now < sub.endsAt;
+      if (sub.provider === "manual") return sub.endsAt ? now < sub.endsAt : true;
+      // Card subscriptions: if the renewal date passed (plus grace) and no webhook moved
+      // the row on, treat it as lapsed instead of trusting a stale "active" forever.
+      if (sub.renewsAt && now.getTime() >= sub.renewsAt.getTime() + graceDays * DAY) return false;
       return true;
     case "cancelled":
       return sub.endsAt != null && now < sub.endsAt;
@@ -46,7 +63,15 @@ export function hasActiveMembership(sub: MembershipLike | null | undefined, now:
   }
 }
 
-export type RemainingKind = "renews" | "ends" | "trial" | "grace" | "none";
+const notStartedYet = (sub: MembershipLike, now: Date) => Boolean(sub.startsAt && now < sub.startsAt);
+
+export function hasActiveMembership(sub: MembershipLike | null | undefined, now: Date, graceDays: number, opts: AccessOptions = {}): boolean {
+  if (!sub) return false;
+  if (notStartedYet(sub, now)) return false;
+  return validIgnoringStart(sub, now, graceDays, opts);
+}
+
+export type RemainingKind = "starts" | "renews" | "ends" | "trial" | "grace" | "none";
 
 export type Remaining = {
   kind: RemainingKind;
@@ -57,12 +82,13 @@ export type Remaining = {
 };
 
 /** What the admin dashboard shows as "days left" for a membership. */
-export function membershipRemaining(sub: MembershipLike, now: Date, graceDays: number): Remaining {
+export function membershipRemaining(sub: MembershipLike, now: Date, graceDays: number, opts: AccessOptions = {}): Remaining {
   const toDays = (at: Date) => Math.max(0, Math.ceil((at.getTime() - now.getTime()) / DAY));
   const pick = (kind: RemainingKind, at: Date | null | undefined): Remaining =>
     at ? { kind, days: toDays(at), at } : { kind: "none", days: 0, at: null };
 
-  if (!hasActiveMembership(sub, now, graceDays)) return { kind: "none", days: 0, at: sub.endsAt ?? null };
+  if (!validIgnoringStart(sub, now, graceDays, opts)) return { kind: "none", days: 0, at: sub.endsAt ?? null };
+  if (notStartedYet(sub, now)) return pick("starts", sub.startsAt);
 
   switch (sub.status) {
     case "on_trial":
@@ -83,7 +109,7 @@ export function membershipRemaining(sub: MembershipLike, now: Date, graceDays: n
 /** Urgency bucket for colour-coding in the admin. */
 export function urgency(r: Remaining): "expired" | "critical" | "soon" | "ok" {
   if (r.kind === "none") return "expired";
-  if (r.kind === "renews") return "ok"; // auto-renewing card subscriptions aren't "ending"
+  if (r.kind === "renews" || r.kind === "starts") return "ok"; // not "ending"
   if (r.days <= 3) return "critical";
   if (r.days <= 7) return "soon";
   return "ok";

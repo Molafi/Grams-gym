@@ -46,13 +46,21 @@ function LabelPreview({ data, rtl }: { data: ProductFormData; rtl: boolean }) {
   return <canvas ref={ref} width={1024} height={512} className="w-full rounded-xl border border-hairline" aria-hidden />;
 }
 
-export function ProductForm({ initial }: { initial: ProductFormData }) {
+export function ProductForm({ initial, version }: { initial: ProductFormData; version: string }) {
   const t = useTranslations("admin");
   const tf = useTranslations("admin.productFields");
   const ts = useTranslations("shop.categories");
   const tc = useTranslations("common");
   const locale = useLocale();
   const [data, setData] = useState(initial);
+  // After a save the page re-renders with fresh data (new `version`). Reload the form from it
+  // so typed stock values and the stock baseline (`stockOrig`) come from the same snapshot;
+  // otherwise a second save would re-add units sold in between.
+  const [syncedVersion, setSyncedVersion] = useState(version);
+  if (version !== syncedVersion) {
+    setSyncedVersion(version);
+    setData(initial);
+  }
   const [state, action, pending] = useActionState<AdminState, FormData>(saveProduct, {});
   const set = <K extends keyof ProductFormData>(k: K, v: ProductFormData[K]) => setData((d) => ({ ...d, [k]: v }));
   const setVariant = (i: number, patch: Partial<ProductFormData["variants"][number]>) =>
@@ -120,6 +128,8 @@ export function ProductForm({ initial }: { initial: ProductFormData }) {
           {data.variants.map((v, i) => (
             <div key={v.id ?? `new-${i}`} className="grid gap-3 rounded-2xl border border-hairline p-4 md:grid-cols-4">
               {v.id ? <input type="hidden" name={`v${i}_id`} value={v.id} /> : null}
+              {/* Stock as loaded: the server applies only the change, so sales made while this form is open aren't lost. */}
+              {v.id ? <input type="hidden" name={`v${i}_stockOrig`} value={initial.variants.find((iv) => iv.id === v.id)?.stock ?? v.stock} /> : null}
               {(
                 [
                   ["sku", "sku", "ltr"],

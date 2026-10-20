@@ -12,7 +12,7 @@ import { INTERVAL_MONTHS } from "@/config/plans";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { providerForMemberships } from "@/lib/payments";
 import { ingestLemonSqueezyEvent } from "@/lib/payments/lemonsqueezy-events";
-import { planPrice } from "./membership";
+import { getCurrentSubscription, isMembershipActive, planPrice } from "./membership";
 
 const joinSchema = z.object({
   plan: z.string().min(1).max(40),
@@ -45,8 +45,17 @@ export async function startMembershipCheckout(_prev: JoinState, formData: FormDa
   const plan = await db.plan.findFirst({ where: { slug: input.plan, active: true, kind: "membership" } });
   if (!plan) return { error: "generic" };
 
+  // Already paying by card? Don't start a second recurring subscription; plan changes,
+  // cancellation and card updates happen from the membership page / customer portal.
+  const current = await getCurrentSubscription(user.id);
+  if (current && current.provider === "lemonsqueezy" && !current.cancelled && isMembershipActive(current)) {
+    redirect(`/${input.locale}/account/membership`);
+  }
+
   let target: string;
   if (paymentSimulatorEnabled) {
+    // The simulator is for the built-in test accounts only; real users wait for real payments.
+    if (!user.isTestAccount) return { error: "notConfigured" };
     target = `/${input.locale}/checkout/simulate?plan=${plan.slug}&interval=${input.interval}`;
   } else {
     if (!lemonSqueezyConfigured || !lsVariantId(plan.slug, input.interval)) return { error: "notConfigured" };
@@ -81,8 +90,11 @@ export async function simulateMembershipPayment(formData: FormData): Promise<voi
   });
   const user = await getSessionUser();
   if (!user || !user.email) redirect(signInPath(input.locale, `/${input.locale}/packages`));
+  // Only the built-in test accounts may use the simulator. A real (Google) user must never
+  // be able to grant themselves a free membership, even while test mode is on.
+  if (!user.isTestAccount) throw new Error("Simulator is for test accounts only");
 
-  const plan = await db.plan.findFirstOrThrow({ where: { slug: input.plan, kind: "membership" } });
+  const plan = await db.plan.findFirstOrThrow({ where: { slug: input.plan, kind: "membership", active: true } });
   const now = new Date();
   const subId = `sim_${randomUUID()}`;
   const custom = { user_id: user.id, plan_slug: plan.slug, interval: input.interval };
@@ -97,6 +109,7 @@ export async function simulateMembershipPayment(formData: FormData): Promise<voi
     trial_ends_at: null,
     renews_at: addMonths(now, INTERVAL_MONTHS[input.interval]).toISOString(),
     ends_at: null,
+    updated_at: now.toISOString(),
     test_mode: true,
     urls: { customer_portal: null, update_payment_method: null },
   };
@@ -151,6 +164,7 @@ async function simulateLifecycle(sub: { lsSubscriptionId: string | null; renewsA
           trial_ends_at: null,
           renews_at: sub.renewsAt?.toISOString() ?? null,
           ends_at: cancelled ? (sub.renewsAt?.toISOString() ?? null) : null,
+          updated_at: new Date().toISOString(),
           test_mode: true,
           urls: { customer_portal: null, update_payment_method: null },
         },

@@ -7,7 +7,8 @@ import {
   updateSubscription,
 } from "@lemonsqueezy/lemonsqueezy.js";
 import { env, lemonSqueezyConfigured, lsVariantId } from "@/lib/env";
-import { rescaleMinor } from "@/lib/money";
+import { PENDING_HOLD_MINUTES } from "@/lib/orders";
+import { toStoreMinor } from "./currency";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { ingestLemonSqueezyEvent } from "./lemonsqueezy-events";
 import { verifySignature } from "./signature";
@@ -57,9 +58,8 @@ export const lemonSqueezyProvider: PaymentProvider = {
     // Supplement order through Lemon Squeezy (only when SUPPLEMENT_PAYMENT_MODE=lemonsqueezy).
     const variantId = env.LS_VARIANT_SUPPLEMENT_ORDER;
     if (!variantId) throw new PaymentError("VARIANT_MISSING", "LS_VARIANT_SUPPLEMENT_ORDER is not set");
-    // NOTE: custom_price is in the STORE currency's cents. See docs/SETUP.md "Currency".
     const { data, error } = await createCheckout(storeId, variantId, {
-      customPrice: rescaleMinor(input.order.totalMinor, input.order.currency, "USD"),
+      customPrice: toStoreMinor(input.order.totalMinor, input.order.currency),
       checkoutData: {
         email: input.user.email,
         name: input.user.name ?? undefined,
@@ -69,6 +69,8 @@ export const lemonSqueezyProvider: PaymentProvider = {
         name: `GRAMS GYM order ${input.order.number}`,
         redirectUrl: `${site()}/${input.locale}/checkout/success?order=${encodeURIComponent(input.order.number)}`,
       },
+      // Same lifetime as the stock hold, so customers can't pay after the units were released.
+      expiresAt: new Date(Date.now() + PENDING_HOLD_MINUTES * 60_000).toISOString(),
       testMode: env.LEMONSQUEEZY_TEST_MODE,
     });
     const url = data?.data.attributes.url;
@@ -77,15 +79,17 @@ export const lemonSqueezyProvider: PaymentProvider = {
   },
 
   async handleWebhook(req: Request): Promise<Response> {
-    try {
-      await enforceRateLimit("webhook-ls", 300, 60_000, "global");
-    } catch (e) {
-      if (e instanceof RateLimitError) return new Response("Too many requests", { status: 429 });
-      throw e;
-    }
+    // Verify first (cheap HMAC). Only unsigned/forged requests are rate-limited, per IP,
+    // so junk traffic can never use up a shared budget and get real deliveries rejected.
     const raw = await req.text();
     const signature = req.headers.get("x-signature");
     if (!verifySignature(raw, signature, env.LEMONSQUEEZY_WEBHOOK_SECRET)) {
+      try {
+        await enforceRateLimit("webhook-ls-invalid", 30, 60_000);
+      } catch (e) {
+        if (e instanceof RateLimitError) return new Response("Too many requests", { status: 429 });
+        throw e;
+      }
       return new Response("Invalid signature", { status: 401 });
     }
     try {

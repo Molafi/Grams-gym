@@ -1,23 +1,36 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
-import { hasActiveMembership, membershipRemaining } from "@/lib/membership";
+import { env, testDataAllowed } from "@/lib/env";
+import { hasActiveMembership, membershipRemaining, type MembershipLike, type Remaining } from "@/lib/membership";
 
 const include = { plan: true } satisfies Prisma.SubscriptionInclude;
 export type SubscriptionWithPlan = Prisma.SubscriptionGetPayload<{ include: typeof include }>;
+
+/**
+ * The access rules with this deployment's settings applied (grace period, and whether
+ * test-mode memberships still count). Use these everywhere instead of calling
+ * `hasActiveMembership` / `membershipRemaining` directly.
+ */
+export function isMembershipActive(sub: MembershipLike | null | undefined, now = new Date()): boolean {
+  return hasActiveMembership(sub, now, env.MEMBERSHIP_GRACE_DAYS, { allowTestMode: testDataAllowed });
+}
+
+export function remainingFor(sub: MembershipLike, now = new Date()): Remaining {
+  return membershipRemaining(sub, now, env.MEMBERSHIP_GRACE_DAYS, { allowTestMode: testDataAllowed });
+}
 
 /** The membership that matters for a user: the active one, otherwise the most recent. */
 export async function getCurrentSubscription(userId: string): Promise<SubscriptionWithPlan | null> {
   const subs = await db.subscription.findMany({ where: { userId }, include, orderBy: { createdAt: "desc" }, take: 20 });
   const now = new Date();
-  return subs.find((s) => hasActiveMembership(s, now, env.MEMBERSHIP_GRACE_DAYS)) ?? subs[0] ?? null;
+  return subs.find((s) => isMembershipActive(s, now)) ?? subs[0] ?? null;
 }
 
 export function describe(sub: SubscriptionWithPlan, now = new Date()) {
   return {
-    active: hasActiveMembership(sub, now, env.MEMBERSHIP_GRACE_DAYS),
-    remaining: membershipRemaining(sub, now, env.MEMBERSHIP_GRACE_DAYS),
+    active: isMembershipActive(sub, now),
+    remaining: remainingFor(sub, now),
   };
 }
 

@@ -23,6 +23,7 @@ export default async function SimulatedCheckoutPage({ params, searchParams }: Pa
   const rawInterval = firstParam(sp.interval);
   const interval = rawInterval === "quarterly" || rawInterval === "yearly" ? rawInterval : "monthly";
   const user = await requireUser(locale, `/${locale}/checkout/simulate?plan=${slug}&interval=${interval}`);
+  if (!user.isTestAccount) notFound(); // real accounts never see the simulator
   const plan = await db.plan.findFirst({ where: { slug, kind: "membership", active: true } });
   if (!plan) notFound();
 

@@ -7,6 +7,8 @@ import { formatMoney } from "@/lib/money";
 import { Badge, Card } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
 import { updateOrderStatus } from "@/features/admin/actions";
+import { CLOSED_STATUSES, isClosed } from "@/lib/orders";
+import { requireRole } from "@/lib/auth/guards";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,8 @@ const STATUSES: OrderStatus[] = ["pending", "paid", "pay_on_delivery", "processi
 export default async function AdminOrdersPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Each admin page checks the role itself; the layout check alone is not an auth boundary.
+  await requireRole(locale, "STAFF", `/${locale}/admin/orders`);
   const statusRaw = firstParam((await searchParams).status);
   const status = STATUSES.find((s) => s === statusRaw);
   const t = await getTranslations({ locale, namespace: "admin" });
@@ -33,7 +37,6 @@ export default async function AdminOrdersPage({ params, searchParams }: PageProp
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl">{t("nav.orders")}</h1>
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- CSV file download from an API route, not page navigation */}
         <a href="/api/admin/export?type=orders" download className="inline-flex h-10 items-center gap-2 rounded-full border border-hairline-strong px-4 text-sm">
           <Download className="h-4 w-4" aria-hidden /> {t("exportCsv")}
         </a>
@@ -103,7 +106,8 @@ export default async function AdminOrdersPage({ params, searchParams }: PageProp
                       <input type="hidden" name="id" value={o.id} />
                       <input type="hidden" name="locale" value={locale} />
                       <select name="status" defaultValue={o.status} className="field !w-auto !py-1.5 text-xs" aria-label={t("orderStatus")}>
-                        {STATUSES.map((s) => (
+                        {/* Cancelled/refunded orders have had their stock returned and can't be reopened. */}
+                        {(isClosed(o.status) ? CLOSED_STATUSES : STATUSES).map((s) => (
                           <option key={s} value={s}>
                             {to(`status.${s}`)}
                           </option>

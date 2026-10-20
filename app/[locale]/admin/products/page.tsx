@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import type { PageProps } from "@/lib/metadata";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
-import { getSessionUser, hasRole } from "@/lib/auth/guards";
+import { hasRole, requireRole } from "@/lib/auth/guards";
 import { Badge, Card } from "@/components/ui/primitives";
 import { ButtonLink } from "@/components/ui/Button";
 import { PackArt } from "@/components/shop/PackArt";
@@ -15,10 +15,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminProductsPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Each admin page checks the role itself; the layout check alone is not an auth boundary.
+  const me = await requireRole(locale, "STAFF", `/${locale}/admin/products`);
   const t = await getTranslations({ locale, namespace: "admin" });
   const tc = await getTranslations({ locale, namespace: "common" });
   const ts = await getTranslations({ locale, namespace: "shop" });
-  const me = await getSessionUser();
   const products = await db.product.findMany({ include: { variants: { orderBy: { priceMinor: "asc" } } }, orderBy: { createdAt: "asc" } });
 
   return (

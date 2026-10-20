@@ -36,8 +36,12 @@ test.describe("test accounts + mocked membership checkout", () => {
 
     await page.goto("/en/packages");
     await page.getByRole("button", { name: /join pro/i }).first().click();
-    await expect(page).toHaveURL(/checkout\/simulate/);
-    await page.getByRole("button", { name: /simulated/i }).click();
+    // Existing subscribers are sent straight to their membership (no double subscription),
+    // which is what happens when another project already ran this test on the same DB.
+    await expect(page).toHaveURL(/checkout\/simulate|account\/membership/);
+    if (/checkout\/simulate/.test(page.url())) {
+      await page.getByRole("button", { name: /simulated/i }).click();
+    }
 
     await expect(page).toHaveURL(/account\/membership/);
     await expect(page.getByText("Active").first()).toBeVisible({ timeout: 20_000 });

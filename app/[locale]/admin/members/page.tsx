@@ -3,9 +3,9 @@ import { Download, Search } from "lucide-react";
 import type { Prisma } from "@prisma/client";
 import { firstParam, type PageProps } from "@/lib/metadata";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
-import { getSessionUser, hasRole } from "@/lib/auth/guards";
-import { hasActiveMembership, membershipRemaining, urgency } from "@/lib/membership";
+import { hasRole, requireRole } from "@/lib/auth/guards";
+import { urgency } from "@/lib/membership";
+import { isMembershipActive, remainingFor } from "@/features/billing/membership";
 import { INTERVAL_MONTHS } from "@/config/plans";
 import { Badge, Card } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
@@ -17,11 +17,12 @@ export const dynamic = "force-dynamic";
 export default async function AdminMembersPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Each admin page checks the role itself; the layout check alone is not an auth boundary.
+  const me = await requireRole(locale, "STAFF", `/${locale}/admin/members`);
   const q = firstParam((await searchParams).q)?.trim() ?? "";
   const t = await getTranslations({ locale, namespace: "admin" });
   const tc = await getTranslations({ locale, namespace: "common" });
   const f = await getFormatter({ locale });
-  const me = await getSessionUser();
   const isAdmin = hasRole(me, "ADMIN");
 
   const where: Prisma.UserWhereInput = q
@@ -39,7 +40,6 @@ export default async function AdminMembersPage({ params, searchParams }: PagePro
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl">{t("nav.members")}</h1>
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- CSV file download from an API route, not page navigation */}
         <a href="/api/admin/export?type=members" download className="inline-flex h-10 items-center gap-2 rounded-full border border-hairline-strong px-4 text-sm">
           <Download className="h-4 w-4" aria-hidden /> {t("exportCsv")}
         </a>
@@ -68,9 +68,9 @@ export default async function AdminMembersPage({ params, searchParams }: PagePro
             </thead>
             <tbody>
               {users.map((u) => {
-                const sub = u.subscriptions.find((s) => hasActiveMembership(s, now, env.MEMBERSHIP_GRACE_DAYS)) ?? u.subscriptions[0];
-                const rem = sub ? membershipRemaining(sub, now, env.MEMBERSHIP_GRACE_DAYS) : null;
-                const active = sub ? hasActiveMembership(sub, now, env.MEMBERSHIP_GRACE_DAYS) : false;
+                const sub = u.subscriptions.find((s) => isMembershipActive(s, now)) ?? u.subscriptions[0];
+                const rem = sub ? remainingFor(sub, now) : null;
+                const active = sub ? isMembershipActive(sub, now) : false;
                 return (
                   <tr key={u.id}>
                     <td>
