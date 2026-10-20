@@ -451,7 +451,8 @@
       "emailTaken": "This email is already used by another member.",
       "weak": "The password must be at least 8 characters.",
       "current": "Your current password is wrong.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "db": "The database isn't running, so nobody can sign in right now. Start it and try again (see docs/SETUP.md)."
     },
     "testGuest": "Continue as guest admin (view only)",
     "testMemberShort": "Test member",

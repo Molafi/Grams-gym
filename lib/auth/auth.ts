@@ -10,6 +10,7 @@ import { env, guestAdminEnabled, testAccountsEnabled, testAdminEnabled } from "@
 import { parseMemberNumber } from "@/lib/member-number";
 import { clientIp, hit, isLimited } from "@/lib/rate-limit";
 import { verifyPassword } from "./password";
+import { dbKnownDown, isDbUnavailable, markDbDown } from "@/lib/db-status";
 
 declare module "next-auth" {
   interface Session {
@@ -144,8 +145,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       const uid = user?.id ?? tokenString(token.uid) ?? token.sub;
       if (uid) {
+        const signedOut = { ...token, uid: undefined, role: undefined };
+        // Database unreachable: keep the session as it was instead of making every page wait
+        // for a connection timeout. (Nothing that needs the database works meanwhile anyway.)
+        // The on/off switches for demo accounts are still enforced from the token.
+        const offline = () => {
+          if (token.isTestAccount && !testAccountsEnabled) return signedOut;
+          if (token.isTestAccount && token.role !== "MEMBER" && !testAdminEnabled) return signedOut;
+          if (token.isGuest && !guestAdminEnabled) return signedOut;
+          return token;
+        };
+        if (!user && dbKnownDown()) return offline();
         // Refresh role on every token evaluation so role changes / revocations apply quickly.
-        const dbUser = await db.user.findUnique({ where: { id: uid }, select: { id: true, role: true, isTestAccount: true, isGuest: true, memberNumber: true, mustChangePassword: true, name: true, email: true, sessionVersion: true } });
+        let dbUser;
+        try {
+          dbUser = await db.user.findUnique({ where: { id: uid }, select: { id: true, role: true, isTestAccount: true, isGuest: true, memberNumber: true, mustChangePassword: true, name: true, email: true, sessionVersion: true } });
+        } catch (e) {
+          if (user || !isDbUnavailable(e)) throw e;
+          markDbDown("session check");
+          return offline();
+        }
         if (!dbUser) return { ...token, uid: undefined, role: undefined };
         // Password changed or reset since this session was issued → sign it out.
         if (user) token.sv = dbUser.sessionVersion;

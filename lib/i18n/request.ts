@@ -1,23 +1,17 @@
 import { getRequestConfig } from "next-intl/server";
 import { hasLocale } from "next-intl";
 import { routing } from "./routing";
-import { db } from "@/lib/db";
 import { applyOverrides } from "@/lib/content-keys";
-import { logOptionalReadFailure } from "@/lib/db-status";
+import { getTextOverrides } from "@/lib/content-store";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
   const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
   const defaults = (await import(`../../messages/${locale}.json`)).default;
 
-  // Text edited in /admin/content overrides the defaults. If the DB is down, use the defaults.
-  let messages = defaults;
-  try {
-    const overrides = await db.contentOverride.findMany({ where: { locale }, select: { key: true, value: true } });
-    if (overrides.length) messages = applyOverrides(defaults, overrides);
-  } catch (e) {
-    logOptionalReadFailure("text edits", e);
-  }
+  // Text edited in /admin/content overrides the defaults (defaults if the DB is down).
+  const overrides = await getTextOverrides(locale);
+  const messages = overrides?.length ? applyOverrides(defaults, overrides) : defaults;
 
   return { locale, messages, timeZone: "Asia/Amman" };
 });

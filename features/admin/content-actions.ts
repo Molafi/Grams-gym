@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { assertRole } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
 import { flatten, LOCKED_NAMESPACES, namespaceOf, samePlaceholders } from "@/lib/content-keys";
-import { BUSINESS_FIELDS, businessDefaults } from "@/lib/business";
+import { BUSINESS_FIELDS, businessDefaults, clearBusinessCache } from "@/lib/business";
+import { clearTextOverrides } from "@/lib/content-store";
 import ar from "@/messages/ar.json";
 import en from "@/messages/en.json";
 
@@ -58,6 +59,7 @@ export async function saveContent(_prev: ContentState, fd: FormData): Promise<Co
       }),
     ),
   ]);
+  clearTextOverrides();
   await audit(actor.id, "content.update", "ContentOverride", ns, { changed: upserts.length, reset: deletes.length });
   revalidatePath("/", "layout");
   return { ok: true, saved: upserts.length };
@@ -89,6 +91,7 @@ export async function saveBusiness(_prev: ContentState, fd: FormData): Promise<C
   }
   if (badKeys.length) return { error: "invalid", badKeys };
   await db.$transaction(ops);
+  clearBusinessCache();
   await audit(actor.id, "business.update", "SiteSetting", null);
   revalidatePath("/", "layout");
   return { ok: true };

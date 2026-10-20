@@ -6,7 +6,7 @@ import { Badge, Container, SectionHeading } from "@/components/ui/primitives";
 import { JoinButton, PlanCards } from "@/features/billing/PlanCards";
 import { toPlanCard } from "@/features/billing/plan-data";
 import { describe, getActivePlans, getAddons, getCurrentSubscription } from "@/features/billing/membership";
-import { nullIfDbDown } from "@/lib/db-status";
+import { readOrNull } from "@/lib/db-status";
 import { Unavailable } from "@/components/ui/Unavailable";
 
 export async function generateMetadata({ params }: PageProps) {
@@ -21,7 +21,7 @@ export default async function PackagesPage({ params, searchParams }: PageProps) 
   setRequestLocale(locale);
   const sp = await searchParams;
   const t = await getTranslations({ locale, namespace: "packages" });
-  const data = await Promise.all([getActivePlans(), getAddons(), getSessionUser()]).catch(nullIfDbDown("memberships page"));
+  const data = await readOrNull("memberships page", () => Promise.all([getActivePlans(), getAddons(), getSessionUser()]));
   if (!data) {
     return (
       <section className="atmosphere pb-10 pt-40">

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Reveal } from "@/components/motion/Reveal";
 import { Link } from "@/lib/i18n/navigation";
-import { nullIfDbDown } from "@/lib/db-status";
+import { readOrNull } from "@/lib/db-status";
 import { Unavailable } from "@/components/ui/Unavailable";
 
 export async function generateMetadata({ params }: PageProps) {
@@ -32,7 +32,7 @@ export default async function ShopPage({ params, searchParams }: PageProps) {
   const sort = SORTS.find((s) => s === sortRaw) ?? "featured";
   const inStock = firstParam(sp.stock) === "1";
 
-  const products = await listProducts({ q, category, sort, inStock }).catch(nullIfDbDown("store"));
+  const products = await readOrNull("store", () => listProducts({ q, category, sort, inStock }));
   if (!products) {
     return (
       <section className="atmosphere pb-12 pt-40">

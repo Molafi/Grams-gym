@@ -47,7 +47,7 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
 
           {error ? (
             <p role="alert" className="mt-6 rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
-              {error === "rate" ? tc("rateLimited") : t("error")}
+              {error === "rate" ? tc("rateLimited") : error === "db" ? t("errors.db") : t("error")}
             </p>
           ) : null}
 

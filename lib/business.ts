@@ -2,7 +2,8 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { site } from "@/config/site";
-import { logOptionalReadFailure } from "@/lib/db-status";
+import { readOrNull } from "@/lib/db-status";
+import { memo } from "@/lib/memo";
 
 /**
  * Business facts editable in /admin/content → "Business info".
@@ -49,12 +50,14 @@ export type Business = {
   hours: { key: string; days: readonly string[]; opens: string; closes: string; label: { ar: string; en: string } }[];
 };
 
+const settings = memo(60_000, () => db.siteSetting.findMany());
+/** Call after saving business info. */
+export const clearBusinessCache = () => settings.clear();
+
 export const getBusiness = cache(async (): Promise<Business> => {
   const v = businessDefaults();
-  try {
-    for (const r of await db.siteSetting.findMany()) if (Object.hasOwn(v, r.key) && r.value.trim()) v[r.key] = r.value;
-  } catch (e) {
-    logOptionalReadFailure("business info", e);
+  for (const r of (await readOrNull("business info", () => settings.get("all"))) ?? []) {
+    if (Object.hasOwn(v, r.key) && r.value.trim()) v[r.key] = r.value;
   }
   return {
     phone: { display: v.phoneDisplay!, e164: toE164(v.phoneDisplay!) },

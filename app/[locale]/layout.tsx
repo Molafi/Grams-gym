@@ -21,7 +21,8 @@ import { localBusinessJsonLd } from "@/lib/seo";
 import { getMedia } from "@/lib/media";
 import { getBusiness } from "@/lib/business";
 import "../globals.css";
-import { logOptionalReadFailure } from "@/lib/db-status";
+import { readOrNull } from "@/lib/db-status";
+import { memo } from "@/lib/memo";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -61,18 +62,19 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+// Product names for the ⌘K search, on every page: cached for a minute.
+const palette = memo(60_000, () =>
+  db.product.findMany({
+    where: { active: true },
+    select: { slug: true, nameAr: true, nameEn: true, brand: true },
+    take: 100,
+    orderBy: { featured: "desc" },
+  }),
+);
+
 async function paletteProducts() {
-  try {
-    return await db.product.findMany({
-      where: { active: true },
-      select: { slug: true, nameAr: true, nameEn: true, brand: true },
-      take: 100,
-      orderBy: { featured: "desc" },
-    });
-  } catch (e) {
-    logOptionalReadFailure("search palette", e);
-    return []; // the shell must render even if the DB is unreachable
-  }
+  // The shell must render (fast) even if the DB is unreachable.
+  return (await readOrNull("search palette", () => palette.get("all"))) ?? [];
 }
 
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {

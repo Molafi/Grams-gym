@@ -13,6 +13,7 @@ import { env, guestAdminEnabled, guestAdminPassword, testAccountsEnabled, testAd
 import { ensureDemoAccounts, GUEST_ADMIN_NUMBER } from "@/lib/demo-accounts";
 import { audit } from "@/lib/audit";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
+import { dbKnownDown, isDbUnavailable, markDbDown } from "@/lib/db-status";
 import { phoneDigits } from "@/lib/phone";
 
 function safeCallback(raw: FormDataEntryValue | null, locale: string) {
@@ -27,7 +28,7 @@ function localeOf(formData: FormData) {
 }
 
 export type AuthFormState = {
-  error?: "credentials" | "rate" | "invalid" | "mismatch" | "phoneTaken" | "emailTaken" | "weak" | "current" | "generic";
+  error?: "credentials" | "rate" | "invalid" | "mismatch" | "phoneTaken" | "emailTaken" | "weak" | "current" | "generic" | "db";
   ok?: boolean;
 };
 
@@ -41,9 +42,17 @@ async function limited(scope: string, limit: number, windowMs: number): Promise<
   }
 }
 
+/** "Database down" → a clear message instead of a crash or a misleading "wrong password". */
+function dbDown(e: unknown, where: string): boolean {
+  if (!isDbUnavailable(e)) return false;
+  markDbDown(where);
+  return true;
+}
+
 /** Sign in with membership number + password. */
 export async function signInWithMemberNumber(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const locale = localeOf(formData);
+  if (dbKnownDown()) return { error: "db" };
   if (await limited("signin", 20, 60_000)) return { error: "rate" };
   const memberNumber = String(formData.get("memberNumber") ?? "");
   const password = String(formData.get("password") ?? "");
@@ -51,6 +60,7 @@ export async function signInWithMemberNumber(_prev: AuthFormState, formData: For
   try {
     await signIn("member", { memberNumber, password, redirectTo: safeCallback(formData.get("callbackUrl"), locale) });
   } catch (e) {
+    if (dbDown(e, "sign-in")) return { error: "db" };
     if (e instanceof AuthError) return { error: (e as { code?: string }).code === "rate" ? "rate" : "credentials" };
     throw e; // NEXT_REDIRECT must propagate
   }
@@ -70,6 +80,7 @@ const registerSchema = z
 /** Self-service account creation. The new membership number is shown on the account page. */
 export async function registerMember(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const locale = localeOf(formData);
+  if (dbKnownDown()) return { error: "db" };
   if (await limited("register", 5, 60 * 60_000)) return { error: "rate" };
   const parsed = registerSchema.safeParse({
     name: formData.get("name"),
@@ -103,6 +114,7 @@ export async function registerMember(_prev: AuthFormState, formData: FormData): 
     number = user.memberNumber;
     await audit(user.id, "user.register", "User", user.id);
   } catch (e) {
+    if (dbDown(e, "registration")) return { error: "db" };
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       const target = String((e.meta as { target?: unknown } | undefined)?.target ?? "");
       return { error: target.includes("phone") ? "phoneTaken" : "emailTaken" };
@@ -168,8 +180,16 @@ export async function signInAsTestAccount(formData: FormData) {
   const password = kind === "admin" ? env.TEST_ADMIN_PASSWORD : env.TEST_MEMBER_PASSWORD;
   if (!email || !password) redirect(`/${locale}/signin?error=testConfig`);
 
+  if (dbKnownDown()) redirect(`/${locale}/signin?error=db`);
   // Keeps GG-99001 (test member) usable with the normal number + password form too.
-  if (kind === "member") await ensureDemoAccounts(db, { memberEmail: email, memberPassword: password });
+  if (kind === "member") {
+    try {
+      await ensureDemoAccounts(db, { memberEmail: email, memberPassword: password });
+    } catch (e) {
+      if (dbDown(e, "test sign-in")) redirect(`/${locale}/signin?error=db`);
+      throw e;
+    }
+  }
 
   const fallback = kind === "admin" ? `/${locale}/admin` : `/${locale}/account`;
   const raw = formData.get("callbackUrl");
@@ -178,6 +198,7 @@ export async function signInAsTestAccount(formData: FormData) {
   try {
     await signIn("test-account", { email, password, redirectTo });
   } catch (e) {
+    if (dbDown(e, "test sign-in")) redirect(`/${locale}/signin?error=db`);
     if (e instanceof AuthError) redirect(`/${locale}/signin?error=credentials`);
     throw e; // NEXT_REDIRECT must propagate
   }
@@ -189,10 +210,12 @@ export async function signInAsGuestAdmin(formData: FormData) {
   const password = guestAdminPassword;
   if (!guestAdminEnabled || !testAdminEnabled || !password) redirect(`/${locale}/signin`);
   if (await limited("signin", 20, 60_000)) redirect(`/${locale}/signin?error=rate`);
-  await ensureDemoAccounts(db, { guestPassword: password });
+  if (dbKnownDown()) redirect(`/${locale}/signin?error=db`);
   try {
+    await ensureDemoAccounts(db, { guestPassword: password });
     await signIn("member", { memberNumber: String(GUEST_ADMIN_NUMBER), password, redirectTo: `/${locale}/admin` });
   } catch (e) {
+    if (dbDown(e, "guest sign-in")) redirect(`/${locale}/signin?error=db`);
     if (e instanceof AuthError) redirect(`/${locale}/signin?error=credentials`);
     throw e;
   }

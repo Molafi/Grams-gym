@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { assertRole, AuthError } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
 import { isMediaKey } from "@/config/media";
+import { clearMediaCache } from "@/lib/media";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
 
   if (fd.get("action") === "reset") {
     await db.mediaAsset.deleteMany({ where: { key } });
+    clearMediaCache();
     await audit(actor.id, "media.reset", "MediaAsset", key);
     revalidatePath("/", "layout");
     return Response.json({ ok: true });
@@ -80,6 +82,7 @@ export async function POST(req: Request) {
     create: { key, ...alt, ...(upload ?? {}), updatedBy: actor.id },
     update: { ...alt, ...(upload ?? {}), updatedBy: actor.id },
   });
+  clearMediaCache();
   await audit(actor.id, upload ? "media.upload" : "media.alt", "MediaAsset", key, upload ? { bytes: upload.data.byteLength, mime: upload.mime } : undefined);
   revalidatePath("/", "layout");
   return Response.json({ ok: true });

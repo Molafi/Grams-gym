@@ -9,14 +9,16 @@ import { Badge, Container } from "@/components/ui/primitives";
 import { ProductStage } from "@/components/shop/ProductStage";
 import { AddToCart } from "@/components/shop/AddToCart";
 import { Link } from "@/lib/i18n/navigation";
-import { nullIfDbDown } from "@/lib/db-status";
+import { dbKnownDown, nullIfDbDown, readOrNull } from "@/lib/db-status";
 import { Unavailable } from "@/components/ui/Unavailable";
 
 type Props = PageProps<{ slug: string }>;
 
+class DbDown extends Error {}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
-  const p = await getProduct(slug).catch(nullIfDbDown("product metadata"));
+  const p = await readOrNull("product metadata", () => getProduct(slug));
   if (!p) return {};
   const name = locale === "en" ? p.nameEn : p.nameAr;
   return {
@@ -34,9 +36,10 @@ export default async function ProductPage({ params }: Props) {
   setRequestLocale(locale);
   let product: Awaited<ReturnType<typeof getProduct>>;
   try {
+    if (dbKnownDown()) throw new DbDown();
     product = await getProduct(slug);
   } catch (e) {
-    nullIfDbDown("product page")(e); // rethrows anything that isn't "database down"
+    if (!(e instanceof DbDown)) nullIfDbDown("product page")(e); // rethrows anything that isn't "database down"
     return (
       <section className="atmosphere pb-24 pt-32">
         <Unavailable locale={locale} />
