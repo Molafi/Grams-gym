@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { site } from "@/config/site";
-import { readOrNull } from "@/lib/db-status";
+import { optionalRead } from "@/lib/db-status";
 import { memo } from "@/lib/memo";
 
 /**
@@ -56,7 +56,7 @@ export const clearBusinessCache = () => settings.clear();
 
 export const getBusiness = cache(async (): Promise<Business> => {
   const v = businessDefaults();
-  for (const r of (await readOrNull("business info", () => settings.get("all"))) ?? []) {
+  for (const r of (await optionalRead("business info", () => settings.get("all"))) ?? []) {
     if (Object.hasOwn(v, r.key) && r.value.trim()) v[r.key] = r.value;
   }
   return {

@@ -16,14 +16,14 @@ import { toPlanCard } from "@/features/billing/plan-data";
 import { getActivePlans } from "@/features/billing/membership";
 import { featuredProducts } from "@/features/shop/catalog";
 import { Link } from "@/lib/i18n/navigation";
-import { readOrNull } from "@/lib/db-status";
+import { optionalRead } from "@/lib/db-status";
 
 /**
  * The home page is the shop window: if the database is unreachable, skip the
  * data-driven sections (and log) instead of taking the whole page down.
  */
 async function orEmpty<T>(what: string, load: () => Promise<T[]>): Promise<T[]> {
-  return (await readOrNull(`home ${what}`, load)) ?? [];
+  return (await optionalRead(`home ${what}`, load)) ?? [];
 }
 
 export async function PackagesPreview({ locale }: { locale: string }) {

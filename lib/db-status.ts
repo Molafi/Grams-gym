@@ -78,6 +78,28 @@ export async function readOrNull<T>(where: string, load: () => Promise<T>): Prom
   return load().catch(nullIfDbDown(where));
 }
 
+let lastOptionalError = 0;
+
+/**
+ * For data that only decorates a page (text edits, uploaded images, business info, search
+ * list, home teasers): ANY failure falls back to the defaults (null) instead of breaking the
+ * whole page. Real bugs are still logged, at most once a minute.
+ */
+export async function optionalRead<T>(where: string, load: () => Promise<T>): Promise<T | null> {
+  if (dbKnownDown()) return null;
+  try {
+    return await load();
+  } catch (e) {
+    if (isDbUnavailable(e)) {
+      markDbDown(where);
+    } else if (Date.now() - lastOptionalError > 60_000) {
+      lastOptionalError = Date.now();
+      console.error(`[${where}] read failed; showing defaults`, e instanceof Error ? e.message.split("\n").filter(Boolean).pop() : e);
+    }
+    return null;
+  }
+}
+
 /** Logs a failed optional read: one short warning if the DB is down, the full error otherwise. */
 export function logOptionalReadFailure(where: string, e: unknown) {
   if (isDbUnavailable(e)) markDbDown(where);

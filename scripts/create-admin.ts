@@ -10,6 +10,7 @@ import { PrismaClient } from "@prisma/client";
 import { hashPassword, temporaryPassword } from "../lib/auth/password";
 import { formatMemberNumber } from "../lib/member-number";
 import { phoneDigits } from "../lib/phone";
+import { prismaUrl } from "../lib/db-url";
 
 async function main() {
   const [name, phone] = process.argv.slice(2);
@@ -17,7 +18,7 @@ async function main() {
     console.error('Usage: npm run admin:create -- "Full Name" 0791234567');
     process.exit(1);
   }
-  const db = new PrismaClient();
+  const db = new PrismaClient({ datasourceUrl: prismaUrl() });
   try {
     const password = temporaryPassword();
     const passwordHash = await hashPassword(password);
