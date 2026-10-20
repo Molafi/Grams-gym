@@ -34,6 +34,7 @@ export async function startMembershipCheckout(_prev: JoinState, formData: FormDa
   if (!user) {
     redirect(signInPath(input.locale, `/${input.locale}/packages?join=${input.plan}&interval=${input.interval}`));
   }
+  if (user.isGuest) return { error: "generic" }; // view-only guest admin
 
   try {
     await enforceRateLimit("membership-checkout", 8, 60_000, user.id);

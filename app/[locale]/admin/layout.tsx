@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { requireRole } from "@/lib/auth/guards";
 import { AdminNav } from "./nav";
+import { GuestGuard } from "@/features/admin/GuestGuard";
 import { Link } from "@/lib/i18n/navigation";
 
 export const metadata = { robots: { index: false, follow: false } };
@@ -26,6 +27,11 @@ export default async function AdminLayout({ children, params }: { children: Reac
         <div className="mb-6 lg:hidden">
           <AdminNav role={user.role} horizontal />
         </div>
+        {user.isGuest ? (
+          <p role="status" className="mb-6 rounded-xl border border-navy/60 bg-white/[.04] px-4 py-3 text-sm">
+            {t("guestBanner")}
+          </p>
+        ) : null}
         {user.mustChangePassword ? (
           <p role="alert" className="mb-6 rounded-xl border border-warning/50 bg-warning/10 px-4 py-3 text-sm">
             {ta("mustChange")}{" "}
@@ -34,7 +40,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
             </Link>
           </p>
         ) : null}
-        {children}
+        <GuestGuard enabled={user.isGuest}>{children}</GuestGuard>
       </div>
     </div>
   );

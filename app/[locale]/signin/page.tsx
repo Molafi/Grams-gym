@@ -1,7 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { FlaskConical, ShieldCheck, UserRound } from "lucide-react";
+import { Eye, FlaskConical, ShieldCheck, UserRound } from "lucide-react";
 import { firstParam, pageMetadata, type PageProps } from "@/lib/metadata";
-import { testAccountsEnabled, testAdminEnabled } from "@/lib/env";
+import { env, guestAdminEnabled, guestAdminPassword, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
+import { GUEST_ADMIN_NUMBER, TEST_MEMBER_NUMBER } from "@/lib/demo-accounts";
+import { formatMemberNumber } from "@/lib/member-number";
 import { getSessionUser } from "@/lib/auth/guards";
 import { redirect } from "@/lib/i18n/navigation";
 import { Container } from "@/components/ui/primitives";
@@ -9,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { getMedia } from "@/lib/media";
 import { Link } from "@/lib/i18n/navigation";
-import { signInAsTestAccount } from "@/features/auth/actions";
+import { signInAsGuestAdmin, signInAsTestAccount } from "@/features/auth/actions";
 import { RegisterForm, SignInForm } from "@/features/auth/AuthForms";
 
 export async function generateMetadata({ params }: PageProps) {
@@ -86,7 +88,34 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
                     </Button>
                   </form>
                 ) : null}
+                {testAdminEnabled && guestAdminEnabled ? (
+                  <form action={signInAsGuestAdmin}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <Button type="submit" variant="glass" className="w-full" data-testid="guest-admin-login">
+                      <Eye className="h-4 w-4" aria-hidden /> {t("testGuest")}
+                    </Button>
+                  </form>
+                ) : null}
               </div>
+              {/* The same accounts also work in the form above (handy for sharing with someone). */}
+              <dl className="mt-4 grid gap-1 font-mono text-xs text-muted" dir="ltr">
+                {env.TEST_MEMBER_PASSWORD ? (
+                  <div className="flex justify-between gap-3">
+                    <dt>{t("testMemberShort")}</dt>
+                    <dd>
+                      {formatMemberNumber(TEST_MEMBER_NUMBER)} · {env.TEST_MEMBER_PASSWORD}
+                    </dd>
+                  </div>
+                ) : null}
+                {testAdminEnabled && guestAdminEnabled && guestAdminPassword ? (
+                  <div className="flex justify-between gap-3">
+                    <dt>{t("testGuestShort")}</dt>
+                    <dd>
+                      {formatMemberNumber(GUEST_ADMIN_NUMBER)} · {guestAdminPassword}
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
               <p className="mt-3 text-xs text-muted">{t("testNote")}</p>
             </div>
           ) : null}

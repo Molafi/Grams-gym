@@ -107,7 +107,7 @@ export function MediaSlot({
             </button>
           ) : null}
           <span aria-live="polite" className={`text-xs ${status === "saved" ? "text-success" : "text-danger"}`}>
-            {status === "saved" ? tc("saved") : status !== "idle" && status !== "busy" ? t(`errors.${status === "size" || status === "type" || status === "forbidden" ? status : "generic"}`) : ""}
+            {status === "saved" ? tc("saved") : status !== "idle" && status !== "busy" ? t(`errors.${status === "size" || status === "type" || status === "forbidden" || status === "readOnly" ? status : "generic"}`) : ""}
           </span>
         </div>
         <p className="text-[11px] text-muted">{t("hint")}</p>

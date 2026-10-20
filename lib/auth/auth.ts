@@ -6,7 +6,7 @@ import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
-import { env, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
+import { env, guestAdminEnabled, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
 import { parseMemberNumber } from "@/lib/member-number";
 import { clientIp, hit, isLimited } from "@/lib/rate-limit";
 import { verifyPassword } from "./password";
@@ -19,6 +19,7 @@ declare module "next-auth" {
       isTestAccount: boolean;
       memberNumber: number;
       mustChangePassword: boolean;
+      isGuest: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -75,7 +76,7 @@ const providers: Provider[] = [
 
       const user = await db.user.findUnique({
         where: { memberNumber: number },
-        select: { id: true, email: true, name: true, image: true, passwordHash: true, isTestAccount: true, deletionRequestedAt: true },
+        select: { id: true, email: true, name: true, image: true, passwordHash: true, isTestAccount: true, isGuest: true, deletionRequestedAt: true },
       });
       // Always run the hash check, even for unknown numbers, so timing doesn't reveal which exist.
       const ok = await verifyPassword(parsed.data.password, user?.passwordHash);
@@ -84,7 +85,9 @@ const providers: Provider[] = [
         hit(numberKey, FAILS_PER_NUMBER, FAIL_WINDOW);
         return null;
       }
-      if (user.isTestAccount) return null; // test accounts use the test buttons only
+      // Demo accounts only work while they're switched on (see lib/env.ts).
+      if (user.isTestAccount && !testAccountsEnabled) return null;
+      if (user.isGuest && !guestAdminEnabled) return null;
       return { id: user.id, email: user.email, name: user.name, image: user.image };
     },
   }),
@@ -142,7 +145,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const uid = user?.id ?? tokenString(token.uid) ?? token.sub;
       if (uid) {
         // Refresh role on every token evaluation so role changes / revocations apply quickly.
-        const dbUser = await db.user.findUnique({ where: { id: uid }, select: { id: true, role: true, isTestAccount: true, memberNumber: true, mustChangePassword: true, name: true, email: true, sessionVersion: true } });
+        const dbUser = await db.user.findUnique({ where: { id: uid }, select: { id: true, role: true, isTestAccount: true, isGuest: true, memberNumber: true, mustChangePassword: true, name: true, email: true, sessionVersion: true } });
         if (!dbUser) return { ...token, uid: undefined, role: undefined };
         // Password changed or reset since this session was issued → sign it out.
         if (user) token.sv = dbUser.sessionVersion;
@@ -152,11 +155,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // …and a test account with staff/admin rights must die wherever the test admin login
         // isn't allowed (production), including sessions issued before that rule existed.
         if (dbUser.isTestAccount && dbUser.role !== "MEMBER" && !testAdminEnabled) return { ...token, uid: undefined, role: undefined };
+        // The guest admin is signed out as soon as it's switched off.
+        if (dbUser.isGuest && !guestAdminEnabled) return { ...token, uid: undefined, role: undefined };
         token.uid = dbUser.id;
         token.role = dbUser.role;
         token.isTestAccount = dbUser.isTestAccount;
         token.memberNumber = dbUser.memberNumber;
         token.mustChangePassword = dbUser.mustChangePassword;
+        token.isGuest = dbUser.isGuest;
         token.name = dbUser.name;
         token.email = dbUser.email;
       }
@@ -171,6 +177,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.isTestAccount = Boolean(token.isTestAccount);
         session.user.memberNumber = tokenNumber(token.memberNumber) ?? 0;
         session.user.mustChangePassword = Boolean(token.mustChangePassword);
+        session.user.isGuest = Boolean(token.isGuest);
       }
       return session;
     },

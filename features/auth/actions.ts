@@ -9,7 +9,8 @@ import { signIn, signOut } from "@/lib/auth/auth";
 import { getSessionUser } from "@/lib/auth/guards";
 import { hashPassword, PASSWORD_MIN, verifyPassword } from "@/lib/auth/password";
 import { db } from "@/lib/db";
-import { env, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
+import { env, guestAdminEnabled, guestAdminPassword, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
+import { ensureDemoAccounts, GUEST_ADMIN_NUMBER } from "@/lib/demo-accounts";
 import { audit } from "@/lib/audit";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { phoneDigits } from "@/lib/phone";
@@ -136,8 +137,8 @@ export async function changePassword(_prev: AuthFormState, formData: FormData): 
   });
   if (!parsed.success) return { error: parsed.error.issues.some((i) => i.path[0] === "confirm") ? "mismatch" : "weak" };
 
-  const user = await db.user.findUniqueOrThrow({ where: { id: session.id }, select: { passwordHash: true, isTestAccount: true, memberNumber: true } });
-  if (user.isTestAccount) return { error: "generic" };
+  const user = await db.user.findUniqueOrThrow({ where: { id: session.id }, select: { passwordHash: true, isTestAccount: true, isGuest: true, memberNumber: true } });
+  if (user.isTestAccount || user.isGuest) return { error: "generic" }; // shared demo logins keep their password
   // The current password is always required (a temporary one counts).
   if (!(await verifyPassword(parsed.data.current ?? "", user.passwordHash))) return { error: "current" };
 
@@ -167,6 +168,9 @@ export async function signInAsTestAccount(formData: FormData) {
   const password = kind === "admin" ? env.TEST_ADMIN_PASSWORD : env.TEST_MEMBER_PASSWORD;
   if (!email || !password) redirect(`/${locale}/signin?error=testConfig`);
 
+  // Keeps GG-99001 (test member) usable with the normal number + password form too.
+  if (kind === "member") await ensureDemoAccounts(db, { memberEmail: email, memberPassword: password });
+
   const fallback = kind === "admin" ? `/${locale}/admin` : `/${locale}/account`;
   const raw = formData.get("callbackUrl");
   const redirectTo = typeof raw === "string" && raw ? safeCallback(raw, locale) : fallback;
@@ -176,6 +180,21 @@ export async function signInAsTestAccount(formData: FormData) {
   } catch (e) {
     if (e instanceof AuthError) redirect(`/${locale}/signin?error=credentials`);
     throw e; // NEXT_REDIRECT must propagate
+  }
+}
+
+/** One-click view-only guest admin (local test mode only; in production it signs in with GG-99002 + password). */
+export async function signInAsGuestAdmin(formData: FormData) {
+  const locale = localeOf(formData);
+  const password = guestAdminPassword;
+  if (!guestAdminEnabled || !testAdminEnabled || !password) redirect(`/${locale}/signin`);
+  if (await limited("signin", 20, 60_000)) redirect(`/${locale}/signin?error=rate`);
+  await ensureDemoAccounts(db, { guestPassword: password });
+  try {
+    await signIn("member", { memberNumber: String(GUEST_ADMIN_NUMBER), password, redirectTo: `/${locale}/admin` });
+  } catch (e) {
+    if (e instanceof AuthError) redirect(`/${locale}/signin?error=credentials`);
+    throw e;
   }
 }
 

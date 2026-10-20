@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getSessionUser } from "@/lib/auth/guards";
+import { getActingUser } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
 import { phoneDigits } from "@/lib/phone";
 
@@ -22,7 +22,7 @@ const profileSchema = z.object({
 });
 
 export async function updateProfile(_prev: ProfileState, formData: FormData): Promise<ProfileState> {
-  const user = await getSessionUser();
+  const user = await getActingUser();
   if (!user) return { error: true };
   const parsed = profileSchema.safeParse({
     name: formData.get("name"),
@@ -50,7 +50,7 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
 }
 
 export async function requestDataDeletion(formData: FormData): Promise<void> {
-  const user = await getSessionUser();
+  const user = await getActingUser();
   if (!user) return;
   const locale = formData.get("locale") === "en" ? "en" : "ar";
   await db.user.update({ where: { id: user.id }, data: { deletionRequestedAt: new Date() } });

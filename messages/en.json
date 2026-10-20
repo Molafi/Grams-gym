@@ -453,7 +453,10 @@
       "weak": "The password must be at least 8 characters.",
       "current": "Your current password is wrong.",
       "generic": "Something went wrong. Please try again."
-    }
+    },
+    "testGuest": "Continue as guest admin (view only)",
+    "testMemberShort": "Test member",
+    "testGuestShort": "Guest admin"
   },
   "account": {
     "title": "My account",
@@ -669,7 +672,8 @@
         "size": "File is larger than 4 MB.",
         "type": "Use a JPG, PNG, WebP or AVIF image.",
         "forbidden": "Only admins can change images.",
-        "generic": "Upload failed. Try again."
+        "generic": "Upload failed. Try again.",
+        "readOnly": "Guest admin is view only."
       }
     },
     "content": {
@@ -723,7 +727,9 @@
         "hours_fri_ar": "Hours Friday (Arabic)",
         "hours_fri_en": "Hours Friday (English)"
       }
-    }
+    },
+    "guestBanner": "You're signed in as a guest admin: you can look at everything, but nothing you change will be saved.",
+    "guestBlocked": "Guest admin is view only — this change wasn't saved."
   },
   "legal": {
     "draft": "DRAFT — this document must be reviewed by a qualified lawyer in Jordan before going live.",

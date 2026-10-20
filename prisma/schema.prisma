@@ -107,6 +107,8 @@ model User {
   /// Bumped on every password change/reset; sessions issued under an older value are signed out.
   sessionVersion      Int       @default(0)
   isTestAccount       Boolean   @default(false)
+  /// Guest admin: can open every admin page but can't change anything (lib/auth/guards.ts).
+  isGuest             Boolean   @default(false)
   isDemo              Boolean   @default(false)
   deletionRequestedAt DateTime?
   createdAt           DateTime  @default(now())

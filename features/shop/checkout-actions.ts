@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { env, testDataAllowed } from "@/lib/env";
-import { getSessionUser } from "@/lib/auth/guards";
+import { getActingUser } from "@/lib/auth/guards";
 import { lineTotal, sumMinor } from "@/lib/money";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { providerForOrders } from "@/lib/payments";
@@ -54,7 +54,7 @@ function orderNumber() {
 class StockError extends Error {}
 
 export async function placeOrder(_prev: CheckoutState, formData: FormData): Promise<CheckoutState> {
-  const user = await getSessionUser();
+  const user = await getActingUser(); // not the view-only guest admin
   if (!user) return { error: "auth" };
 
   try {

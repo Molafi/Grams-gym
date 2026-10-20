@@ -38,6 +38,15 @@ and a password.
   password. Run it once against the production database (`DATABASE_URL`). Further staff/admins: change their role in
   `/admin/members`.
 
+### Demo accounts
+| Account | Membership number | Password | Can |
+|---|---|---|---|
+| Test member | `GG-99001` | `TEST_MEMBER_PASSWORD` | everything a member can (test mode only) |
+| Guest admin | `GG-99002` | `GUEST_ADMIN_PASSWORD` (local default `guest-preview`) | **view** every admin page; saves, uploads, exports and check-ins are blocked |
+
+Both are created by `npm run db:seed` (or on first one-click sign-in) and listed on `/signin` in test mode. The guest
+admin works on a deployed site only with `ENABLE_GUEST_ADMIN=true` and is signed out as soon as that is turned off.
+
 ## 3. Lemon Squeezy (test mode)
 
 > Read the approval risk in `docs/OWNER-TODO.md` first.

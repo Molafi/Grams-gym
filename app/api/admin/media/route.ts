@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   try {
     actor = await assertRole("ADMIN");
   } catch (e) {
-    if (e instanceof AuthError) return Response.json({ error: "forbidden" }, { status: 403 });
+    if (e instanceof AuthError) return Response.json({ error: e.code === "READ_ONLY" ? "readOnly" : "forbidden" }, { status: 403 });
     throw e;
   }
 
