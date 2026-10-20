@@ -18,6 +18,8 @@ import { SceneProvider } from "@/components/3d/SceneProvider";
 import { Toaster } from "@/components/ui/Toaster";
 import { CartSync } from "@/features/shop/CartSync";
 import { localBusinessJsonLd } from "@/lib/seo";
+import { getMedia } from "@/lib/media";
+import { getBusiness } from "@/lib/business";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -83,6 +85,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     getTranslations({ locale, namespace: "a11y" }),
   ]);
   const tc = await getTranslations({ locale, namespace: "contact" });
+  const media = await getMedia();
+  const biz = await getBusiness();
 
   return (
     <html lang={locale} dir={dirFor(locale)} className={fontVariables} suppressHydrationWarning>
@@ -90,14 +94,14 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         className="bg-bg text-ink"
         style={testAccountsEnabled ? ({ "--ribbon-h": "28px" } as React.CSSProperties) : undefined}
       >
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd(locale)) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd(locale, biz)).replace(/</g, "\\u003c") }} />
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ember focus:px-4 focus:py-2 focus:text-[#130800]">
           {ta("skip")}
         </a>
         <NextIntlClientProvider>
           <SceneProvider>
             {testAccountsEnabled ? <TestModeRibbon label={t("ribbon")} /> : null}
-            <Navbar user={user ? { name: user.name, role: user.role } : null} products={products} />
+            <Navbar user={user ? { name: user.name, role: user.role } : null} products={products} logoSrc={media.logo.src} />
             <main id="main" className="relative" style={{ paddingTop: "var(--ribbon-h, 0px)" }}>
               {children}
             </main>

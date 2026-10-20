@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { Card } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
 import { ProfileForm } from "@/features/account/ProfileForm";
+import { ChangePasswordForm } from "@/features/auth/AuthForms";
 import { requestDataDeletion } from "@/features/account/actions";
 
 export default async function SettingsPage({ params }: PageProps) {
@@ -21,6 +22,12 @@ export default async function SettingsPage({ params }: PageProps) {
         <h2 className="display mb-6 text-xl">{t("profile")}</h2>
         <ProfileForm defaults={{ name: user.name ?? "", email: user.email ?? "", phone: user.phone ?? "", locale: user.locale }} />
       </Card>
+      {!user.isTestAccount ? (
+        <Card className="h-fit p-7">
+          <h2 className="display mb-6 text-xl">{t("passwordTitle")}</h2>
+          <ChangePasswordForm />
+        </Card>
+      ) : null}
       <Card className="h-fit p-7">
         <h2 className="display text-xl">{t("deleteTitle")}</h2>
         <p className="mt-3 text-sm text-muted">{t("deleteBody")}</p>

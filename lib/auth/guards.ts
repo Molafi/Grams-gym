@@ -10,6 +10,8 @@ export type SessionUser = {
   name: string | null;
   image: string | null;
   isTestAccount: boolean;
+  memberNumber: number;
+  mustChangePassword: boolean;
 };
 
 export async function getSessionUser(): Promise<SessionUser | null> {
@@ -23,6 +25,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     name: u.name ?? null,
     image: u.image ?? null,
     isTestAccount: Boolean(u.isTestAccount),
+    memberNumber: u.memberNumber,
+    mustChangePassword: Boolean(u.mustChangePassword),
   };
 }
 

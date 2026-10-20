@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { Link, usePathname } from "@/lib/i18n/navigation";
-import { GGMark } from "@/components/ui/GGMark";
+import { Logo } from "@/components/ui/Logo";
 import { buttonClass } from "@/components/ui/Button";
 import { useCartCount } from "@/features/shop/cart-store";
 import { NAV_ITEMS } from "./nav-items";
@@ -14,7 +14,7 @@ import { CommandPalette, type PaletteProduct } from "./CommandPalette";
 
 export type NavUser = { name: string | null; role: "MEMBER" | "STAFF" | "ADMIN" } | null;
 
-export function Navbar({ user, products }: { user: NavUser; products: PaletteProduct[] }) {
+export function Navbar({ user, products, logoSrc }: { user: NavUser; products: PaletteProduct[]; logoSrc: string | null }) {
   const t = useTranslations("nav");
   const ta = useTranslations("a11y");
   const locale = useLocale();
@@ -60,7 +60,7 @@ export function Navbar({ user, products }: { user: NavUser; products: PalettePro
       >
         <nav className="mx-auto flex h-[72px] max-w-[1320px] items-center gap-6 px-5 sm:px-8 lg:px-12" aria-label="Main">
           <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="GRAMS GYM">
-            <GGMark className="h-7 w-auto" title="" />
+            <Logo src={logoSrc} className="h-11 w-11" />
             <span className="hidden font-[family-name:var(--font-latin)] text-[13px] font-semibold tracking-[0.28em] sm:inline" dir="ltr">
               GRAMS <span className="text-ember">GYM</span>
             </span>

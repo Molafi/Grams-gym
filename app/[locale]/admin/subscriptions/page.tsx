@@ -12,6 +12,7 @@ import { getActivePlans } from "@/features/billing/membership";
 import { listSubscriptions } from "@/features/admin/queries";
 import { cancelManualMembership, extendMembership } from "@/features/admin/actions";
 import { GrantForm } from "@/features/admin/GrantForm";
+import { formatMemberNumber } from "@/lib/member-number";
 
 export const dynamic = "force-dynamic";
 
@@ -111,7 +112,7 @@ export default async function AdminSubscriptionsPage({ params, searchParams }: P
                       {s.testMode ? <Badge tone="navy">TEST</Badge> : null}
                     </p>
                     <p className="text-xs text-muted" dir="ltr">
-                      {s.user.email}
+                      {formatMemberNumber(s.user.memberNumber)}
                       {s.user.phone ? ` · ${s.user.phone}` : ""}
                     </p>
                   </td>

@@ -1,5 +1,6 @@
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
-import type { PageProps } from "@/lib/metadata";
+import { firstParam, type PageProps } from "@/lib/metadata";
+import { formatMemberNumber } from "@/lib/member-number";
 import { requireUser } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
@@ -8,7 +9,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { describe, getCurrentSubscription } from "@/features/billing/membership";
 import { MembershipSummary } from "@/features/billing/MembershipSummary";
 
-export default async function AccountOverviewPage({ params }: PageProps) {
+export default async function AccountOverviewPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const user = await requireUser(locale, `/${locale}/account`);
@@ -20,9 +21,19 @@ export default async function AccountOverviewPage({ params }: PageProps) {
   const tm = await getTranslations({ locale, namespace: "membership" });
   const to = await getTranslations({ locale, namespace: "order" });
   const f = await getFormatter({ locale });
+  const welcome = firstParam((await searchParams).welcome) === "1";
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      {welcome ? (
+        <Card className="border-ember/50 p-7 lg:col-span-2">
+          <h2 className="display text-xl">{t("welcomeTitle")}</h2>
+          <p className="mt-2 text-muted">{t("welcomeBody")}</p>
+          <p className="display tabular mt-4 text-4xl text-ember" dir="ltr">
+            {formatMemberNumber(user.memberNumber)}
+          </p>
+        </Card>
+      ) : null}
       <Card className="p-7">
         <h2 className="display mb-6 text-xl">{t("membership")}</h2>
         {sub ? (

@@ -40,7 +40,7 @@ export const lemonSqueezyProvider: PaymentProvider = {
       if (!variantId) throw new PaymentError("VARIANT_MISSING", `No variant for ${input.planSlug}/${input.interval}`);
       const { data, error } = await createCheckout(storeId, variantId, {
         checkoutData: {
-          email: input.user.email,
+          email: input.user.email ?? undefined,
           name: input.user.name ?? undefined,
           custom: { user_id: input.user.id, plan_slug: input.planSlug, interval: input.interval },
         },
@@ -61,7 +61,7 @@ export const lemonSqueezyProvider: PaymentProvider = {
     const { data, error } = await createCheckout(storeId, variantId, {
       customPrice: toStoreMinor(input.order.totalMinor, input.order.currency),
       checkoutData: {
-        email: input.user.email,
+        email: input.user.email ?? undefined,
         name: input.user.name ?? undefined,
         custom: { user_id: input.user.id, order_id: input.order.id },
       },

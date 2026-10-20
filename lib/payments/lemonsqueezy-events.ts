@@ -108,11 +108,11 @@ async function upsertSubscription(evt: ParsedEvent) {
     return;
   }
 
-  // Resolve the user: custom data first, then existing row, then email.
+  // Resolve the user: custom data first, then the existing row.
   let userId: string | undefined;
   if (custom.user_id) userId = (await db.user.findUnique({ where: { id: custom.user_id }, select: { id: true } }))?.id;
   if (!userId && existing) userId = existing.userId;
-  if (!userId && a.user_email) userId = (await db.user.findUnique({ where: { email: a.user_email }, select: { id: true } }))?.id;
+  // No lookup by email: emails are self-entered (not verified), so they can't prove ownership.
   if (!userId) throw new Error(`No user found for subscription ${lsId}`);
 
   // Resolve plan + interval from the variant map (authoritative), else the stored row.

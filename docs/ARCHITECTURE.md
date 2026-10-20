@@ -2,7 +2,7 @@
 
 ## Stack
 Next.js 16 (App Router, Server Components by default) · React 19 · TypeScript strict · Tailwind CSS 4 ·
-next-intl 4 (`/ar`, `/en`, Arabic default, RTL) · Auth.js v5 (Google + build-phase test accounts, JWT sessions) ·
+next-intl 4 (`/ar`, `/en`, Arabic default, RTL) · Auth.js v5 (membership number + password, build-phase test accounts, JWT sessions) ·
 Prisma 6 + PostgreSQL · Lemon Squeezy (memberships) behind a `PaymentProvider` interface · three.js / R3F 9 / drei 10 ·
 motion + Lenis · zod everywhere · Vitest + Playwright.
 

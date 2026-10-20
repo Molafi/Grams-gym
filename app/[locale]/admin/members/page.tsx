@@ -11,6 +11,8 @@ import { Badge, Card } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
 import { DaysLeft } from "@/components/admin/DaysLeft";
 import { changeRole } from "@/features/admin/actions";
+import { ResetPasswordButton } from "@/features/admin/ResetPasswordButton";
+import { formatMemberNumber, parseMemberNumber } from "@/lib/member-number";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +27,16 @@ export default async function AdminMembersPage({ params, searchParams }: PagePro
   const f = await getFormatter({ locale });
   const isAdmin = hasRole(me, "ADMIN");
 
+  const asNumber = q ? parseMemberNumber(q) : null;
   const where: Prisma.UserWhereInput = q
-    ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }] }
+    ? {
+        OR: [
+          ...(asNumber ? [{ memberNumber: asNumber }] : []),
+          { name: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+          { phone: { contains: q } },
+        ],
+      }
     : {};
   const users = await db.user.findMany({
     where,
@@ -79,9 +89,15 @@ export default async function AdminMembersPage({ params, searchParams }: PagePro
                         {u.deletionRequestedAt ? <Badge tone="danger">DELETE?</Badge> : null}
                       </p>
                       <p className="text-xs text-muted" dir="ltr">
-                        {u.email}
+                        <span className="font-mono text-ember">{formatMemberNumber(u.memberNumber)}</span>
                         {u.phone ? ` · ${u.phone}` : ""}
+                        {u.email ? ` · ${u.email}` : ""}
                       </p>
+                      {!u.isTestAccount && (isAdmin || u.role === "MEMBER") ? (
+                        <div className="mt-1.5">
+                          <ResetPasswordButton userId={u.id} />
+                        </div>
+                      ) : null}
                     </td>
                     <td>{sub ? <span className={active ? "" : "text-muted"}>{locale === "en" ? sub.plan.nameEn : sub.plan.nameAr}</span> : <span className="text-muted">—</span>}</td>
                     <td>

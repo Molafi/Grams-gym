@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Apple, Dumbbell, HeartPulse, UserRoundCheck } from "lucide-react";
 import { pageMetadata, type PageProps } from "@/lib/metadata";
-import { media } from "@/config/media";
+import { getMedia } from "@/lib/media";
 import { Container, SectionHeading } from "@/components/ui/primitives";
 import { Photo } from "@/components/ui/Photo";
 import { Reveal, RevealImage } from "@/components/motion/Reveal";
@@ -17,6 +17,7 @@ export default async function ServicesPage({ params }: PageProps) {
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "services" });
   const tc = await getTranslations({ locale, namespace: "common" });
+  const media = await getMedia();
   const items = [
     { key: "training", Icon: Dumbbell, media: media.freeWeights },
     { key: "personal", Icon: UserRoundCheck, media: media.gymInterior },

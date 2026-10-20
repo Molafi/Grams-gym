@@ -1,59 +1,91 @@
 /**
- * Photo registry. The original photos were not in the files received in this build,
- * so every entry starts as `src: null` and renders an art-directed placeholder.
- * To upgrade: drop the file into /public/images/... and set `src`. See docs/OWNER-TODO.md.
+ * Image registry: the default file for every image slot on the site.
+ * Admins can replace any of them in /admin/media (stored in the MediaAsset table, which
+ * wins over these defaults). Resolve with `getMedia()` from lib/media.ts.
  */
 export type MediaItem = {
   src: string | null;
-  width: number;
-  height: number;
   alt: { ar: string; en: string };
   tone: "navy" | "ember" | "steel";
 };
 
+export type MediaGroup = "brand" | "home" | "facilities" | "coaches" | "services";
+
 export const media = {
+  logo: {
+    src: "/images/logo.png",
+    alt: { ar: "شعار جرامز جيم", en: "GRAMS GYM logo" },
+    tone: "navy",
+  },
   heroBg: {
-    src: null,
-    width: 2400,
-    height: 1600,
+    src: "/images/hero.jpg",
     alt: { ar: "جدار جرامز جيم الأزرق مع شعار GG", en: "The navy GRAMS GYM wall with the GG monogram" },
     tone: "navy",
   },
   gymInterior: {
-    src: null,
-    width: 2000,
-    height: 1333,
+    src: "/images/gym-interior.jpg",
     alt: { ar: "صالة جرامز جيم من الداخل", en: "Inside GRAMS GYM" },
     tone: "steel",
   },
   freeWeights: {
-    src: null,
-    width: 2000,
-    height: 1333,
+    src: "/images/free-weights.jpg",
     alt: { ar: "رف الدمبلز", en: "The dumbbell rack" },
     tone: "navy",
   },
   cardio: {
-    src: null,
-    width: 2000,
-    height: 1333,
+    src: "/images/cardio.jpg",
     alt: { ar: "منطقة الكارديو", en: "The cardio zone" },
     tone: "steel",
   },
   machines: {
-    src: null,
-    width: 2000,
-    height: 1333,
+    // The uploaded machines.jpg is identical to gym-interior.jpg — replace it in /admin/media.
+    src: "/images/machines.jpg",
     alt: { ar: "أجهزة المقاومة", en: "Resistance machines" },
     tone: "ember",
   },
   nutrition: {
-    src: null,
-    width: 2000,
-    height: 1333,
+    src: "/images/nutrition.jpg",
     alt: { ar: "وجبات صحية محضرة", en: "Prepared healthy meals" },
     tone: "ember",
+  },
+  coachAhmad: {
+    src: "/images/coaches/ahmad.jpg",
+    alt: { ar: "المدرب أحمد", en: "Coach Ahmad" },
+    tone: "steel",
+  },
+  coachAmr: {
+    src: "/images/coaches/amr.jpg",
+    alt: { ar: "المدرب عمرو", en: "Coach Amr" },
+    tone: "steel",
+  },
+  coachSimon: {
+    src: "/images/coaches/simon.jpg",
+    alt: { ar: "المدرب سايمون", en: "Coach Simon" },
+    tone: "steel",
+  },
+  coachZaid: {
+    src: "/images/coaches/zaid.jpg",
+    alt: { ar: "المدرب زيد", en: "Coach Zaid" },
+    tone: "steel",
   },
 } satisfies Record<string, MediaItem>;
 
 export type MediaKey = keyof typeof media;
+export const MEDIA_KEYS = Object.keys(media) as MediaKey[];
+
+/** How each slot is grouped and labelled in /admin/media. */
+export const MEDIA_GROUPS: Record<MediaKey, MediaGroup> = {
+  logo: "brand",
+  heroBg: "home",
+  gymInterior: "facilities",
+  freeWeights: "facilities",
+  cardio: "facilities",
+  machines: "facilities",
+  nutrition: "services",
+  coachAhmad: "coaches",
+  coachAmr: "coaches",
+  coachSimon: "coaches",
+  coachZaid: "coaches",
+};
+
+export const isMediaKey = (k: string): k is MediaKey => Object.hasOwn(media, k);

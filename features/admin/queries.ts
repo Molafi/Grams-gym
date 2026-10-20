@@ -6,10 +6,11 @@ import { expireStalePendingOrders } from "@/lib/orders";
 import { urgency, type Remaining } from "@/lib/membership";
 import { isMembershipActive, remainingFor } from "@/features/billing/membership";
 import { INTERVAL_MONTHS } from "@/config/plans";
+import { parseMemberNumber } from "@/lib/member-number";
 
 const subInclude = {
   plan: true,
-  user: { select: { id: true, name: true, email: true, phone: true, isDemo: true, isTestAccount: true } },
+  user: { select: { id: true, name: true, email: true, phone: true, isDemo: true, isTestAccount: true, memberNumber: true } },
 } satisfies Prisma.SubscriptionInclude;
 
 export type AdminSubscription = Prisma.SubscriptionGetPayload<{ include: typeof subInclude }> & {
@@ -50,6 +51,7 @@ export async function listSubscriptions(f: SubscriptionFilters = {}): Promise<Ad
       ? {
           user: {
             OR: [
+              ...(parseMemberNumber(q) ? [{ memberNumber: parseMemberNumber(q)! }] : []),
               { name: { contains: q, mode: "insensitive" } },
               { email: { contains: q, mode: "insensitive" } },
               { phone: { contains: q } },

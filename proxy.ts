@@ -9,5 +9,6 @@ import { routing } from "./lib/i18n/routing";
 export default createMiddleware(routing);
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // `media` = uploaded images (app/media/[key]/[version]); they have no locale prefix.
+  matcher: ["/((?!api|media|_next|_vercel|.*\\..*).*)"],
 };

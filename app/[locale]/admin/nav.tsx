@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Boxes, ClipboardList, CreditCard, LayoutDashboard, Logs, QrCode, ScrollText, Tags, Users } from "lucide-react";
+import { Boxes, ClipboardList, CreditCard, FileText, ImageIcon, LayoutDashboard, Logs, QrCode, ScrollText, Tags, Users } from "lucide-react";
 import { Link, usePathname } from "@/lib/i18n/navigation";
 
 const ITEMS = [
@@ -12,6 +12,8 @@ const ITEMS = [
   { key: "orders", href: "/admin/orders", Icon: ClipboardList, min: "STAFF" },
   { key: "products", href: "/admin/products", Icon: Boxes, min: "STAFF" },
   { key: "plans", href: "/admin/plans", Icon: Tags, min: "ADMIN" },
+  { key: "content", href: "/admin/content", Icon: FileText, min: "ADMIN" },
+  { key: "media", href: "/admin/media", Icon: ImageIcon, min: "ADMIN" },
   { key: "webhooks", href: "/admin/webhooks", Icon: Logs, min: "ADMIN" },
   { key: "audit", href: "/admin/audit", Icon: ScrollText, min: "ADMIN" },
 ] as const;

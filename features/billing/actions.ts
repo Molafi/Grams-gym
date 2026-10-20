@@ -31,7 +31,7 @@ export async function startMembershipCheckout(_prev: JoinState, formData: FormDa
   });
 
   const user = await getSessionUser();
-  if (!user || !user.email) {
+  if (!user) {
     redirect(signInPath(input.locale, `/${input.locale}/packages?join=${input.plan}&interval=${input.interval}`));
   }
 
@@ -89,7 +89,7 @@ export async function simulateMembershipPayment(formData: FormData): Promise<voi
     locale: formData.get("locale"),
   });
   const user = await getSessionUser();
-  if (!user || !user.email) redirect(signInPath(input.locale, `/${input.locale}/packages`));
+  if (!user) redirect(signInPath(input.locale, `/${input.locale}/packages`));
   // Only the built-in test accounts may use the simulator. A real (Google) user must never
   // be able to grant themselves a free membership, even while test mode is on.
   if (!user.isTestAccount) throw new Error("Simulator is for test accounts only");

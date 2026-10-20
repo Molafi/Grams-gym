@@ -25,11 +25,12 @@
 - [ ] Commit `prisma/migrations/` (created by your first `npx prisma migrate dev`), then `npx prisma migrate deploy`
       on production; seed plans only (or edit seed to skip demo members/products)
 - [ ] Delete seeded test and demo users (`isTestAccount` / `isDemo`) from production
-- [ ] Promote the real owner account to ADMIN (sign in with Google once, then change the role in the DB or via
-      another admin in `/admin/members`)
+- [ ] Create the owner's admin account: `npm run admin:create -- "Owner Name" 07XXXXXXXX` against the production
+      database, sign in with the printed membership number, then change the temporary password
 
 ## Verify
-- [ ] Google sign-in works on the production domain (redirect URI registered)
+- [ ] Sign-in with a membership number works on the production domain; "Create account" issues a number
+- [ ] Website text (`/admin/content`) and images (`/admin/media`) reviewed; replace the placeholder address
 - [ ] Live purchase with a real card (then refund) → webhook processed in `/admin/webhooks`
 - [ ] `/admin/checkin` with a real member card
 - [ ] Lighthouse mobile on `/ar` and `/en` (target ≥ 90 performance, LCP < 2.5 s, CLS < 0.05)

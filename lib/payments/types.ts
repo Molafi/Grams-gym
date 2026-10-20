@@ -4,7 +4,7 @@ export type ProviderId = "lemonsqueezy" | "manual";
 
 export type SubscriptionCheckoutInput = {
   kind: "subscription";
-  user: { id: string; email: string; name: string | null };
+  user: { id: string; email: string | null; name: string | null };
   planSlug: string;
   interval: BillingInterval;
   locale: string;
@@ -12,7 +12,7 @@ export type SubscriptionCheckoutInput = {
 
 export type OrderCheckoutInput = {
   kind: "order";
-  user: { id: string; email: string; name: string | null };
+  user: { id: string; email: string | null; name: string | null };
   order: { id: string; number: string; totalMinor: number; currency: string };
   locale: string;
 };

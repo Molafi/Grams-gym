@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
+import { phoneDigits } from "@/lib/phone";
 
 export type ProfileState = { ok?: boolean; error?: boolean };
 
@@ -16,6 +17,7 @@ const profileSchema = z.object({
     .max(20)
     .regex(/^[+0-9 ()-]*$/)
     .optional(),
+  email: z.string().trim().toLowerCase().email().max(120).optional(),
   locale: z.enum(["ar", "en"]),
 });
 
@@ -25,13 +27,24 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
   const parsed = profileSchema.safeParse({
     name: formData.get("name"),
     phone: formData.get("phone") || undefined,
+    email: formData.get("email") || undefined,
     locale: formData.get("locale"),
   });
   if (!parsed.success) return { error: true };
-  await db.user.update({
-    where: { id: user.id },
-    data: { name: parsed.data.name, phone: parsed.data.phone ?? null, locale: parsed.data.locale },
-  });
+  try {
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        name: parsed.data.name,
+        phone: parsed.data.phone ?? null,
+        phoneDigits: parsed.data.phone ? phoneDigits(parsed.data.phone) : null,
+        email: parsed.data.email ?? null,
+        locale: parsed.data.locale,
+      },
+    });
+  } catch {
+    return { error: true }; // email or phone already used by another member
+  }
   revalidatePath(`/${parsed.data.locale}/account/settings`);
   return { ok: true };
 }

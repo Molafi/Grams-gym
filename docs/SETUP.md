@@ -1,6 +1,6 @@
 # Setup
 
-## 1. Local (testing mode — no Google, no Lemon Squeezy needed)
+## 1. Local (testing mode — no Lemon Squeezy needed)
 
 ```bash
 cp .env.example .env          # defaults are fine for local testing
@@ -26,18 +26,17 @@ Then:
 Quality checks: `npm run lint && npm run typecheck && npm test && npm run build` (or `npm run ci`).
 E2E: `npx playwright install chromium && npm run test:e2e` (needs the DB seeded and no LS keys in `.env`).
 
-## 2. Google sign-in
-
-1. Google Cloud Console → APIs & Services → **OAuth consent screen**: External, app name "GRAMS GYM", support email,
-   authorised domain = your production domain. Scopes: `openid`, `email`, `profile`.
-2. **Credentials → Create credentials → OAuth client ID → Web application.**
-   - Authorised JavaScript origins: `http://localhost:3000`, `https://YOUR-DOMAIN`
-   - Authorised redirect URIs:
-     - `http://localhost:3000/api/auth/callback/google`
-     - `https://YOUR-DOMAIN/api/auth/callback/google`
-     - (Vercel previews, optional) `https://YOUR-PROJECT-git-BRANCH.vercel.app/api/auth/callback/google`
-3. Put the values in `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`. Set `AUTH_SECRET` (`npx auth secret`) and `AUTH_URL`.
-4. Publish the consent screen (Testing mode only allows listed test users).
+## 2. Member sign-in (membership number + password)
+There is no Google sign-in. Everyone signs in at `/signin` with a **membership number** (shown as `GG-00042`)
+and a password.
+- **New members online:** "Create account" on the sign-in page (name, phone, optional email, password). The
+  membership number is shown right away on their account page.
+- **New members at the desk:** `/admin/subscriptions` → Add membership → **New member**. Staff get the membership
+  number and a **temporary password** to hand over; the member is asked to choose their own after signing in.
+- **Forgotten password:** `/admin/members` → **Reset password** gives a new temporary password.
+- **First admin:** `npm run admin:create -- "Owner Name" 0791234567` prints a membership number and temporary
+  password. Run it once against the production database (`DATABASE_URL`). Further staff/admins: change their role in
+  `/admin/members`.
 
 ## 3. Lemon Squeezy (test mode)
 

@@ -55,7 +55,7 @@ class StockError extends Error {}
 
 export async function placeOrder(_prev: CheckoutState, formData: FormData): Promise<CheckoutState> {
   const user = await getSessionUser();
-  if (!user || !user.email) return { error: "auth" };
+  if (!user) return { error: "auth" };
 
   try {
     await enforceRateLimit("checkout", 10, 60_000, user.id);
@@ -186,7 +186,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   await db.cartItem.deleteMany({ where: { cart: { userId: user.id } } }).catch(() => undefined);
 
   const msg = orderConfirmationEmail(order, input.locale);
-  email.send({ to: user.email, ...msg }).catch((e) => console.error("[email] order confirmation failed", e));
+  if (user.email) email.send({ to: user.email, ...msg }).catch((e) => console.error("[email] order confirmation failed", e));
 
   redirect(target);
 }

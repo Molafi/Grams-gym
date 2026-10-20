@@ -51,14 +51,8 @@ export const site = {
     { key: "thu", days: ["Thursday"], opens: "19:00", closes: "21:00", label: { ar: "7 مساءً – 9 مساءً", en: "7 PM – 9 PM" } },
     { key: "fri", days: ["Friday"], opens: "18:00", closes: "21:00", label: { ar: "6 مساءً – 9 مساءً", en: "6 PM – 9 PM" } },
   ],
-  // TODO(owner): coach photos were not in the files received (and the old ones were ~10 KB).
-  // Drop high-res portraits into /public/images/coaches/ and set `photo` (e.g. "/images/coaches/ahmad.jpg").
-  coaches: [
-    { key: "ahmad", photo: null as string | null },
-    { key: "amr", photo: null as string | null },
-    { key: "simon", photo: null as string | null },
-    { key: "zaid", photo: null as string | null },
-  ],
+  // Coach photos are image slots in config/media.ts (coachAhmad…), editable in /admin/media.
+  coaches: [{ key: "ahmad" }, { key: "amr" }, { key: "simon" }, { key: "zaid" }],
   credit: { label: "SAY AI AGENCY" },
   currency: "JOD",
 } as const;

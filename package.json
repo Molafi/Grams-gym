@@ -22,7 +22,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "posters": "node scripts/generate-posters.mjs"
+    "posters": "node scripts/generate-posters.mjs",
+    "admin:create": "tsx scripts/create-admin.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

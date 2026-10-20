@@ -310,7 +310,7 @@ async function seedDemoMembers() {
     const user = await db.user.upsert({
       where: { email },
       update: {},
-      create: { email, name: `Demo Member ${d.n}`, isDemo: true, phone: `0790000${String(d.n).padStart(3, "0")}` },
+      create: { email, name: `Demo Member ${d.n}`, isDemo: true, phone: `0790000${String(d.n).padStart(3, "0")}`, phoneDigits: `0790000${String(d.n).padStart(3, "0")}` },
     });
     const existing = await db.subscription.findFirst({ where: { userId: user.id } });
     if (existing) continue;
