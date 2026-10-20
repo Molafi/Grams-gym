@@ -18,6 +18,7 @@
     "postinstall": "prisma generate && node scripts/copy-draco.mjs",
     "db:local": "prisma dev",
     "db:setup": "prisma db push && prisma db seed",
+    "db:check": "node scripts/db-check.mjs",
     "db:up": "docker compose up -d db",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",

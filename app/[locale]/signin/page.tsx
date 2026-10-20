@@ -4,6 +4,7 @@ import { firstParam, pageMetadata, type PageProps } from "@/lib/metadata";
 import { env, guestAdminEnabled, guestAdminPassword, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
 import { GUEST_ADMIN_NUMBER, TEST_MEMBER_NUMBER } from "@/lib/demo-accounts";
 import { formatMemberNumber } from "@/lib/member-number";
+import { dbTarget } from "@/lib/db-status";
 import { getSessionUser } from "@/lib/auth/guards";
 import { redirect } from "@/lib/i18n/navigation";
 import { Container } from "@/components/ui/primitives";
@@ -48,6 +49,11 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
           {error ? (
             <p role="alert" className="mt-6 rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
               {error === "rate" ? tc("rateLimited") : error === "db" ? t("errors.db") : t("error")}
+              {error === "db" && process.env.NODE_ENV !== "production" ? (
+                <span className="mt-2 block font-mono text-xs opacity-80" dir="ltr">
+                  DATABASE_URL → {dbTarget()} · npm run db:check
+                </span>
+              ) : null}
             </p>
           ) : null}
 
