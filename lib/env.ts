@@ -18,8 +18,6 @@ const schema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   AUTH_SECRET: z.string().min(16, "AUTH_SECRET must be at least 16 characters"),
-  AUTH_GOOGLE_ID: opt,
-  AUTH_GOOGLE_SECRET: opt,
 
   ENABLE_TEST_ACCOUNT: flag(false),
   ALLOW_TEST_ACCOUNT_IN_PROD: flag(false),
@@ -27,6 +25,9 @@ const schema = z.object({
   TEST_MEMBER_PASSWORD: opt,
   TEST_ADMIN_EMAIL: opt,
   TEST_ADMIN_PASSWORD: opt,
+  /** View-only guest admin (GG-99002). Always on in local test mode; in production only with this flag. */
+  ENABLE_GUEST_ADMIN: flag(false),
+  GUEST_ADMIN_PASSWORD: opt,
 
   LEMONSQUEEZY_API_KEY: opt,
   LEMONSQUEEZY_STORE_ID: opt,
@@ -85,9 +86,14 @@ export const testAdminEnabled = testAccountsEnabled && env.NODE_ENV !== "product
  * Whether memberships/orders created in test mode (payment simulator, LS test checkouts)
  * still count. Once the site is live (test accounts off, LS live mode) they grant nothing.
  */
+/** Guest admin password. Local test mode falls back to "guest-preview"; production needs it set. */
+export const guestAdminPassword = env.GUEST_ADMIN_PASSWORD ?? (testAdminEnabled ? "guest-preview" : undefined);
+
+/** The view-only guest admin can sign in (it can never change anything, see assertRole). */
+export const guestAdminEnabled = Boolean(guestAdminPassword) && (testAdminEnabled || env.ENABLE_GUEST_ADMIN);
+
 export const testDataAllowed = testAccountsEnabled || env.LEMONSQUEEZY_TEST_MODE;
 
-export const googleEnabled = Boolean(env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET);
 
 export const lemonSqueezyConfigured = Boolean(
   env.LEMONSQUEEZY_API_KEY && env.LEMONSQUEEZY_STORE_ID && env.LEMONSQUEEZY_WEBHOOK_SECRET,

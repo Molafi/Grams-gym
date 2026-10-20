@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "motion/react";
 import { RotateCcw } from "lucide-react";
-import { GGMark } from "@/components/ui/GGMark";
+import { Logo } from "@/components/ui/Logo";
 
 /** Digital member card — flips to reveal the check-in QR. */
-export function MemberCard({ name, planName, qrDataUrl, memberCode, validLabel }: { name: string; planName: string; qrDataUrl: string; memberCode: string; validLabel: string }) {
+export function MemberCard({ name, planName, qrDataUrl, memberCode, memberNumber, validLabel, logoSrc }: { name: string; planName: string; qrDataUrl: string; memberCode: string; memberNumber: string; validLabel: string; logoSrc: string | null }) {
   const t = useTranslations("membership");
   const reduce = useReducedMotion();
   const [flipped, setFlipped] = useState(false);
@@ -32,9 +32,9 @@ export function MemberCard({ name, planName, qrDataUrl, memberCode, validLabel }
             <div aria-hidden className="absolute -end-10 -top-10 h-40 w-40 rounded-full bg-ember/20 blur-3xl" />
             <div className="relative flex h-full flex-col">
               <div className="flex items-center justify-between">
-                <GGMark className="h-7 w-auto" title="" />
-                <span className="text-[10px] tracking-[0.3em] text-muted" dir="ltr">
-                  MEMBER
+                <Logo src={logoSrc} className="h-10 w-10" />
+                <span className="font-mono text-xs tracking-[0.2em] text-muted" dir="ltr">
+                  {memberNumber}
                 </span>
               </div>
               <div className="mt-auto">

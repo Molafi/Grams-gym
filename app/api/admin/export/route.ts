@@ -4,6 +4,7 @@ import { audit } from "@/lib/audit";
 import { toMajorString } from "@/lib/money";
 import { SUBSCRIPTION_STATUSES } from "@/lib/membership";
 import { listSubscriptions } from "@/features/admin/queries";
+import { formatMemberNumber } from "@/lib/member-number";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,12 +35,12 @@ export async function GET(req: Request) {
     const within = Number(url.searchParams.get("within")) || undefined;
     const subs = await listSubscriptions({ q: url.searchParams.get("q") ?? undefined, status, withinDays: within });
     rows = [
-      ["member", "email", "phone", "plan", "interval", "provider", "status", "active", "starts_at", "ends_or_renews_at", "days_left", "countdown_kind"],
-      ...subs.map((s) => [s.user.name, s.user.email, s.user.phone, s.plan.slug, s.interval, s.provider, s.status, s.active, s.startsAt, s.endsAt ?? s.renewsAt, s.remaining.days, s.remaining.kind]),
+      ["member_number", "member", "email", "phone", "plan", "interval", "provider", "status", "active", "starts_at", "ends_or_renews_at", "days_left", "countdown_kind"],
+      ...subs.map((s) => [formatMemberNumber(s.user.memberNumber), s.user.name, s.user.email, s.user.phone, s.plan.slug, s.interval, s.provider, s.status, s.active, s.startsAt, s.endsAt ?? s.renewsAt, s.remaining.days, s.remaining.kind]),
     ];
   } else if (type === "members") {
     const users = await db.user.findMany({ orderBy: { createdAt: "desc" } });
-    rows = [["name", "email", "phone", "role", "locale", "created_at", "deletion_requested_at"], ...users.map((u) => [u.name, u.email, u.phone, u.role, u.locale, u.createdAt, u.deletionRequestedAt])];
+    rows = [["member_number", "name", "email", "phone", "role", "locale", "created_at", "deletion_requested_at"], ...users.map((u) => [formatMemberNumber(u.memberNumber), u.name, u.email, u.phone, u.role, u.locale, u.createdAt, u.deletionRequestedAt])];
   } else if (type === "orders") {
     const orders = await db.order.findMany({ orderBy: { createdAt: "desc" }, include: { items: true } });
     rows = [

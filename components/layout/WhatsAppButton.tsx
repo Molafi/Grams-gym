@@ -1,10 +1,11 @@
-import { whatsappLink } from "@/config/site";
+import { getBusiness, whatsappHref } from "@/lib/business";
 
 /** Floating WhatsApp — restyled: dark glass pill with a green status dot, not a loud green blob. */
-export function WhatsAppButton({ locale, label }: { locale: string; label: string }) {
+export async function WhatsAppButton({ locale, label }: { locale: string; label: string }) {
+  const biz = await getBusiness();
   return (
     <a
-      href={whatsappLink(locale)}
+      href={whatsappHref(locale, biz)}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}

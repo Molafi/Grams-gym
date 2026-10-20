@@ -154,6 +154,12 @@ html[lang="ar"] :where(h1, h2, h3, h4, p, span, a, button, label, li) { text-tra
 
 /* Masked reveal (driven by components/motion/Reveal) */
 .reveal-mask { overflow: hidden; display: block; }
+/* Heading line reveal: plays on first paint, no JavaScript needed (see RevealText). */
+.reveal-line { animation: reveal-rise 1.1s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s) both; }
+@keyframes reveal-rise {
+  from { transform: translateY(105%); }
+  to { transform: translateY(0); }
+}
 
 /* Lenis */
 html.lenis, html.lenis body { height: auto; }

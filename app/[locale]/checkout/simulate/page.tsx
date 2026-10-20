@@ -10,6 +10,7 @@ import { Container } from "@/components/ui/primitives";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { simulateMembershipPayment } from "@/features/billing/actions";
 import { planPrice } from "@/features/billing/membership";
+import { formatMemberNumber } from "@/lib/member-number";
 
 export const metadata = { robots: { index: false } };
 
@@ -45,7 +46,7 @@ export default async function SimulatedCheckoutPage({ params, searchParams }: Pa
               <p className="text-sm text-muted">{tp(`interval.${interval}`)}</p>
               <p className="display tabular mt-4 text-3xl">{amount}</p>
               <p className="mt-1 text-xs text-muted" dir="ltr">
-                {user.email} · VISA •••• 4242
+                {formatMemberNumber(user.memberNumber)} · VISA •••• 4242
               </p>
             </div>
             <form action={simulateMembershipPayment} className="mt-8">

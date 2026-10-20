@@ -22,7 +22,7 @@ const csp = [
   "frame-src https://*.lemonsqueezy.com",
   "worker-src 'self' blob:",
   "media-src 'self' blob: mediastream:",
-  "form-action 'self' https://accounts.google.com https://*.lemonsqueezy.com",
+  "form-action 'self' https://*.lemonsqueezy.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "object-src 'none'",

@@ -1,17 +1,18 @@
 # GRAMS GYM — كل غرام بيفرق / Each Gram Matters
 
-Premium bilingual (Arabic/English) gym platform for GRAMS GYM, Amman: cinematic 3D site, Google sign-in,
+Premium bilingual (Arabic/English) gym platform for GRAMS GYM, Amman: cinematic 3D site, sign-in with a membership number,
 membership subscriptions (Lemon Squeezy, test mode), supplement store, member cards with QR check-in, and an
 admin dashboard that shows every member's **days left**.
 
 ## Quick start (testing mode)
 ```bash
+npm run db:local   # terminal 1: local database, keep it open
 cp .env.example .env
 npm install
-npm run db:up && npx prisma migrate dev --name init && npm run db:seed
-npm run dev   # → http://localhost:3000/ar
+npm run db:setup   # tables + demo data
+npm run dev        # → http://localhost:3000/ar
 ```
-Sign in at `/ar/signin` with **Continue as test member** / **Continue as test admin**. No Google or Lemon Squeezy
+Sign in at `/ar/signin` with **Continue as test member** / **Continue as test admin**. No Lemon Squeezy
 account is needed: a payment simulator stands in for checkout until real keys are added.
 
 ## Scripts
@@ -25,9 +26,8 @@ account is needed: a payment simulator stands in for checkout until real keys ar
 
 ## Docs
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — one-page architecture
-- [docs/SETUP.md](docs/SETUP.md) — local setup, Google OAuth, Lemon Squeezy test mode, webhooks, deploy
+- [docs/SETUP.md](docs/SETUP.md) — local setup, member sign-in & first admin, Lemon Squeezy test mode, webhooks, deploy
 - [docs/GO-LIVE-CHECKLIST.md](docs/GO-LIVE-CHECKLIST.md)
 - [docs/OWNER-TODO.md](docs/OWNER-TODO.md) — every placeholder, missing asset, the hours conflict, the payment approval risk
 - [docs/REPORT.md](docs/REPORT.md) — what's real, what's mocked, known limitations, verification status
 
-Footer credit: SAY AI AGENCY.

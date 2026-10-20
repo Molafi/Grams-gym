@@ -1,26 +1,22 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { FlaskConical, ShieldCheck, UserRound } from "lucide-react";
+import { Eye, FlaskConical, ShieldCheck, UserRound } from "lucide-react";
 import { firstParam, pageMetadata, type PageProps } from "@/lib/metadata";
-import { googleEnabled, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
+import { env, guestAdminEnabled, guestAdminPassword, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
+import { GUEST_ADMIN_NUMBER, TEST_MEMBER_NUMBER } from "@/lib/demo-accounts";
+import { formatMemberNumber } from "@/lib/member-number";
 import { getSessionUser } from "@/lib/auth/guards";
 import { redirect } from "@/lib/i18n/navigation";
 import { Container } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
-import { GGMark } from "@/components/ui/GGMark";
+import { Logo } from "@/components/ui/Logo";
+import { getMedia } from "@/lib/media";
 import { Link } from "@/lib/i18n/navigation";
-import { signInAsTestAccount, signInWithGoogle } from "@/features/auth/actions";
+import { signInAsGuestAdmin, signInAsTestAccount } from "@/features/auth/actions";
+import { RegisterForm, SignInForm } from "@/features/auth/AuthForms";
 
 export async function generateMetadata({ params }: PageProps) {
   const { locale } = await params;
   return pageMetadata(locale, "signin", "/signin", { noindex: true });
-}
-
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
-      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.5 14.6 2.5 12 2.5 6.8 2.5 2.6 6.7 2.6 12s4.2 9.5 9.4 9.5c5.4 0 9-3.8 9-9.2 0-.6-.1-1.1-.2-1.6H12z" />
-    </svg>
-  );
 }
 
 export default async function SignInPage({ params, searchParams }: PageProps) {
@@ -29,6 +25,7 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
   const sp = await searchParams;
   const callbackUrl = firstParam(sp.callbackUrl) ?? "";
   const error = firstParam(sp.error);
+  const mode = firstParam(sp.mode) === "register" ? "register" : "signin";
 
   const user = await getSessionUser();
   if (user) {
@@ -38,29 +35,34 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
 
   const t = await getTranslations({ locale, namespace: "auth" });
   const tc = await getTranslations({ locale, namespace: "common" });
+  const media = await getMedia();
 
   return (
     <section className="atmosphere flex min-h-[90vh] items-center pb-24 pt-36">
       <Container className="max-w-md">
         <div className="card p-8 sm:p-10">
-          <GGMark className="h-9 w-auto" title="" />
-          <h1 className="display mt-8 text-3xl">{t("title")}</h1>
-          <p className="mt-3 text-muted">{t("subtitle")}</p>
+          <Logo src={media.logo.src} className="h-16 w-16" />
+          <h1 className="display mt-6 text-3xl">{mode === "register" ? t("registerTitle") : t("title")}</h1>
+          <p className="mt-3 text-muted">{mode === "register" ? t("registerSubtitle") : t("subtitle")}</p>
 
           {error ? (
             <p role="alert" className="mt-6 rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
-              {error === "rate" ? tc("rateLimited") : error === "google" ? t("googleMissing") : t("error")}
+              {error === "rate" ? tc("rateLimited") : error === "db" ? t("errors.db") : t("error")}
             </p>
           ) : null}
 
-          <form action={signInWithGoogle} className="mt-8">
-            <input type="hidden" name="locale" value={locale} />
-            <input type="hidden" name="callbackUrl" value={callbackUrl} />
-            <Button type="submit" variant="glass" size="lg" className="w-full" disabled={!googleEnabled}>
-              <GoogleIcon /> {t("google")}
-            </Button>
-            {!googleEnabled ? <p className="mt-2 text-center text-xs text-muted">{t("googleMissing")}</p> : null}
-          </form>
+          <div className="mt-8">
+            {mode === "register" ? <RegisterForm callbackUrl={callbackUrl} /> : <SignInForm callbackUrl={callbackUrl} />}
+          </div>
+          <p className="mt-6 text-center text-sm text-muted">
+            {mode === "register" ? t("haveNumber") : t("noNumber")}{" "}
+            <Link
+              href={{ pathname: "/signin", query: { ...(mode === "register" ? {} : { mode: "register" }), ...(callbackUrl ? { callbackUrl } : {}) } }}
+              className="text-ember underline underline-offset-4"
+            >
+              {mode === "register" ? t("signIn") : t("createAccount")}
+            </Link>
+          </p>
 
           {testAccountsEnabled ? (
             <div className="mt-8 rounded-2xl border border-dashed border-ember/50 bg-ember/[.04] p-5">
@@ -86,7 +88,34 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
                     </Button>
                   </form>
                 ) : null}
+                {testAdminEnabled && guestAdminEnabled ? (
+                  <form action={signInAsGuestAdmin}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <Button type="submit" variant="glass" className="w-full" data-testid="guest-admin-login">
+                      <Eye className="h-4 w-4" aria-hidden /> {t("testGuest")}
+                    </Button>
+                  </form>
+                ) : null}
               </div>
+              {/* The same accounts also work in the form above (handy for sharing with someone). */}
+              <dl className="mt-4 grid gap-1 font-mono text-xs text-muted" dir="ltr">
+                {env.TEST_MEMBER_PASSWORD ? (
+                  <div className="flex justify-between gap-3">
+                    <dt>{t("testMemberShort")}</dt>
+                    <dd>
+                      {formatMemberNumber(TEST_MEMBER_NUMBER)} · {env.TEST_MEMBER_PASSWORD}
+                    </dd>
+                  </div>
+                ) : null}
+                {testAdminEnabled && guestAdminEnabled && guestAdminPassword ? (
+                  <div className="flex justify-between gap-3">
+                    <dt>{t("testGuestShort")}</dt>
+                    <dd>
+                      {formatMemberNumber(GUEST_ADMIN_NUMBER)} · {guestAdminPassword}
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
               <p className="mt-3 text-xs text-muted">{t("testNote")}</p>
             </div>
           ) : null}

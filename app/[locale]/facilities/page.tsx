@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { pageMetadata, type PageProps } from "@/lib/metadata";
-import { media } from "@/config/media";
+import { getMedia } from "@/lib/media";
 import { Container, SectionHeading } from "@/components/ui/primitives";
 import { Photo } from "@/components/ui/Photo";
 import { Reveal, RevealImage } from "@/components/motion/Reveal";
@@ -16,6 +16,7 @@ export default async function FacilitiesPage({ params }: PageProps) {
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "facilities" });
   const tc = await getTranslations({ locale, namespace: "common" });
+  const media = await getMedia();
   const items = [
     { key: "weights", media: media.freeWeights },
     { key: "machines", media: media.machines },

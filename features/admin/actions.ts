@@ -12,8 +12,18 @@ import { toMinor } from "@/lib/money";
 import { INTERVAL_MONTHS } from "@/config/plans";
 import { processStoredEvent } from "@/lib/payments/lemonsqueezy-events";
 import { closeOrder, isClosed } from "@/lib/orders";
+import { hashPassword, temporaryPassword } from "@/lib/auth/password";
+import { formatMemberNumber, parseMemberNumber } from "@/lib/member-number";
+import { phoneDigits } from "@/lib/phone";
 
-export type AdminState = { ok?: boolean; error?: string };
+export type AdminState = {
+  ok?: boolean;
+  error?: string;
+  /** Shown once to staff after creating a member or resetting a password. */
+  memberNumber?: string;
+  tempPassword?: string;
+  name?: string | null;
+};
 
 const locale = (fd: FormData) => (fd.get("locale") === "en" ? "en" : "ar");
 const revalidateAdmin = (fd: FormData) => revalidatePath(`/${locale(fd)}/admin`, "layout");
@@ -21,9 +31,11 @@ const revalidateAdmin = (fd: FormData) => revalidatePath(`/${locale(fd)}/admin`,
 /* ─── Memberships ────────────────────────────────────────────────────────── */
 
 const grantSchema = z.object({
-  email: z.string().trim().toLowerCase().email(),
-  name: z.string().trim().max(80).optional(),
-  phone: z.string().trim().max(20).optional(),
+  /** Existing member: their membership number. Otherwise a new member is created. */
+  memberNumber: z.string().trim().max(20).optional(),
+  email: z.string().trim().toLowerCase().email().optional(),
+  name: z.string().trim().min(2).max(80).optional(),
+  phone: z.string().trim().regex(/^[+0-9 ()-]{7,20}$/).optional(),
   plan: z.string().min(1),
   interval: z.enum(["monthly", "quarterly", "yearly"]),
   start: z
@@ -41,7 +53,8 @@ const grantSchema = z.object({
 export async function grantMembership(_prev: AdminState, fd: FormData): Promise<AdminState> {
   const actor = await assertRole("STAFF");
   const parsed = grantSchema.safeParse({
-    email: fd.get("email"),
+    memberNumber: fd.get("memberNumber") || undefined,
+    email: fd.get("email") || undefined,
     name: fd.get("name") || undefined,
     phone: fd.get("phone") || undefined,
     plan: fd.get("plan"),
@@ -53,11 +66,36 @@ export async function grantMembership(_prev: AdminState, fd: FormData): Promise<
   const plan = await db.plan.findFirst({ where: { slug: input.plan, kind: "membership" } });
   if (!plan) return { error: "plan" };
 
-  const user = await db.user.upsert({
-    where: { email: input.email },
-    update: { ...(input.phone ? { phone: input.phone } : {}) },
-    create: { email: input.email, name: input.name ?? null, phone: input.phone ?? null },
-  });
+  // Existing member (by number), or a new member who gets a number + temporary password.
+  let user: { id: string; memberNumber: number; name: string | null };
+  let tempPassword: string | undefined;
+  if (input.memberNumber) {
+    const n = parseMemberNumber(input.memberNumber);
+    const found = n ? await db.user.findUnique({ where: { memberNumber: n }, select: { id: true, memberNumber: true, name: true } }) : null;
+    if (!found) return { error: "notFound" };
+    user = found;
+  } else {
+    if (!input.name || !input.phone) return { error: "newMember" };
+    const samePhone = await db.user.findUnique({ where: { phoneDigits: phoneDigits(input.phone) }, select: { memberNumber: true } });
+    if (samePhone) return { error: "phoneExists", memberNumber: formatMemberNumber(samePhone.memberNumber) };
+    tempPassword = temporaryPassword();
+    try {
+      user = await db.user.create({
+        data: {
+          name: input.name,
+          phone: input.phone,
+          phoneDigits: phoneDigits(input.phone),
+          email: input.email ?? null,
+          passwordHash: await hashPassword(tempPassword),
+          mustChangePassword: true,
+        },
+        select: { id: true, memberNumber: true, name: true },
+      });
+    } catch {
+      return { error: "emailExists" };
+    }
+    await audit(actor.id, "user.create", "User", user.id, { memberNumber: user.memberNumber });
+  }
 
   const now = new Date();
   const existing = (await db.subscription.findMany({ where: { userId: user.id, provider: "manual" }, orderBy: { endsAt: "desc" } })).find((s) =>
@@ -86,7 +124,24 @@ export async function grantMembership(_prev: AdminState, fd: FormData): Promise<
     await audit(actor.id, "membership.grant", "Subscription", sub.id, { plan: plan.slug, interval: input.interval });
   }
   revalidateAdmin(fd);
-  return { ok: true };
+  return { ok: true, memberNumber: formatMemberNumber(user.memberNumber), tempPassword, name: user.name };
+}
+
+/**
+ * Front desk: give a member a new temporary password (they must change it on next sign-in).
+ * Staff can reset members; only admins can reset staff/admin accounts.
+ */
+export async function resetMemberPassword(_prev: AdminState, fd: FormData): Promise<AdminState> {
+  const actor = await assertRole("STAFF");
+  const id = String(fd.get("id"));
+  const target = await db.user.findUnique({ where: { id }, select: { role: true, isTestAccount: true, memberNumber: true, name: true } });
+  if (!target || target.isTestAccount) return { error: "notFound" };
+  if (target.role !== "MEMBER" && actor.role !== "ADMIN") return { error: "forbidden" };
+  const tempPassword = temporaryPassword();
+  // sessionVersion bump signs the member out everywhere (e.g. "someone else knows my password").
+  await db.user.update({ where: { id }, data: { passwordHash: await hashPassword(tempPassword), mustChangePassword: true, sessionVersion: { increment: 1 } } });
+  await audit(actor.id, "user.password_reset", "User", id);
+  return { ok: true, tempPassword, memberNumber: formatMemberNumber(target.memberNumber), name: target.name };
 }
 
 export async function extendMembership(fd: FormData): Promise<void> {
@@ -397,10 +452,25 @@ export type CheckInResult = {
 export async function checkInMember(_prev: CheckInResult | null, fd: FormData): Promise<CheckInResult> {
   const actor = await assertRole("STAFF");
   const raw = String(fd.get("code") ?? "").trim();
+  // Either the QR code from the member card, or a typed membership number (GG-00042 / 42).
+  const number = parseMemberNumber(raw);
   const code = raw.startsWith("GG:") ? raw.slice(3) : raw;
-  if (!/^[a-z0-9]{10,40}$/i.test(code)) return { result: "unknown" };
-  const sub = await db.subscription.findUnique({ where: { memberCode: code }, include: { user: true, plan: true } });
-  if (!sub) return { result: "unknown" };
+  const sub = number
+    ? await db.subscription.findFirst({ where: { user: { memberNumber: number } }, include: { user: true, plan: true }, orderBy: { createdAt: "desc" } })
+    : /^[a-z0-9]{10,40}$/i.test(code)
+      ? await db.subscription.findUnique({ where: { memberCode: code }, include: { user: true, plan: true } })
+      : null;
+  if (!sub) {
+    // A real member (typed number) without any membership: say who it is, and deny.
+    if (number) {
+      const member = await db.user.findUnique({ where: { memberNumber: number }, select: { id: true, name: true, email: true } });
+      if (member) {
+        await db.checkIn.create({ data: { userId: member.id, allowed: false, staffId: actor.id } });
+        return { result: "denied", name: member.name ?? member.email };
+      }
+    }
+    return { result: "unknown" };
+  }
 
   // The member may have a newer membership than the one on an old card.
   const all = await db.subscription.findMany({ where: { userId: sub.userId }, include: { plan: true } });

@@ -96,7 +96,19 @@ model User {
   role                Role      @default(MEMBER)
   locale              Locale    @default(ar)
   phone               String?
+  /// Phone reduced to local digits (lib/phone.ts) — one account per phone number.
+  phoneDigits         String?   @unique
+  /// Membership number members sign in with (shown as GG-00042).
+  memberNumber        Int       @unique @default(autoincrement())
+  /// scrypt hash (lib/auth/password.ts). Null = can't sign in until staff set a password.
+  passwordHash        String?
+  /// Set when staff issued a temporary password; the member is asked to change it.
+  mustChangePassword  Boolean   @default(false)
+  /// Bumped on every password change/reset; sessions issued under an older value are signed out.
+  sessionVersion      Int       @default(0)
   isTestAccount       Boolean   @default(false)
+  /// Guest admin: can open every admin page but can't change anything (lib/auth/guards.ts).
+  isGuest             Boolean   @default(false)
   isDemo              Boolean   @default(false)
   deletionRequestedAt DateTime?
   createdAt           DateTime  @default(now())
@@ -409,4 +421,36 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([entity, entityId])
+}
+
+// ─── Content editing (admin → Website) ────────────────────────────────────────
+
+/// Admin edits to website text. Overrides the default in messages/{locale}.json for `key`.
+model ContentOverride {
+  locale    Locale
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@id([locale, key])
+}
+
+/// Images uploaded in the admin. Override the default file in config/media.ts for `key`.
+model MediaAsset {
+  key       String   @id
+  /// Null when only the alt text was edited (the default file is still used).
+  mime      String?
+  data      Bytes?
+  altAr     String?
+  altEn     String?
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+/// Editable business facts (phone, address, hours labels…). Defaults in config/site.ts.
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

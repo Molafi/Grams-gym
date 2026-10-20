@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CheckCircle2, ShieldAlert, Target, Zap } from "lucide-react";
 import { pageMetadata, type PageProps } from "@/lib/metadata";
 import { site } from "@/config/site";
-import { media } from "@/config/media";
+import { getMedia } from "@/lib/media";
 import { Container, Eyebrow } from "@/components/ui/primitives";
 import { ButtonLink } from "@/components/ui/Button";
 import { Photo } from "@/components/ui/Photo";
@@ -19,6 +19,7 @@ export default async function AboutPage({ params }: PageProps) {
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "about" });
   const tc = await getTranslations({ locale, namespace: "common" });
+  const media = await getMedia();
   const values = [
     { key: "discipline", Icon: Target },
     { key: "energy", Icon: Zap },
@@ -44,7 +45,7 @@ export default async function AboutPage({ params }: PageProps) {
             </div>
           </div>
           <RevealImage className="aspect-[4/5] rounded-[28px] border border-hairline">
-            <Photo item={media.gymInterior} locale={locale} className="h-full w-full grayscale" priority pendingLabel={tc("photoPending")} />
+            <Photo item={media.gymInterior} locale={locale} className="h-full w-full grayscale transition-[filter] duration-700 hover:grayscale-0 [@media(hover:none)]:grayscale-0" priority pendingLabel={tc("photoPending")} />
           </RevealImage>
         </Container>
       </section>

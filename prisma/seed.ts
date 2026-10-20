@@ -5,6 +5,7 @@
  */
 import { PrismaClient, type ProductCategory, type ProductShape } from "@prisma/client";
 import { PLAN_SEEDS } from "../config/plans";
+import { ensureDemoAccounts, GUEST_ADMIN_NUMBER, TEST_MEMBER_NUMBER } from "../lib/demo-accounts";
 
 const db = new PrismaClient();
 const DAY = 86_400_000;
@@ -270,6 +271,13 @@ async function seedTestUsers() {
     });
   }
   if (!member || !admin) console.warn("⚠ TEST_MEMBER_EMAIL / TEST_ADMIN_EMAIL not set — test users skipped.");
+
+  // Number + password logins for the test member and the view-only guest admin.
+  const testMode = process.env.ENABLE_TEST_ACCOUNT === "true" && process.env.NODE_ENV !== "production";
+  const guestPassword = process.env.GUEST_ADMIN_PASSWORD || (testMode ? "guest-preview" : undefined);
+  await ensureDemoAccounts(db, { memberEmail: member, memberPassword: process.env.TEST_MEMBER_PASSWORD, guestPassword });
+  if (member && process.env.TEST_MEMBER_PASSWORD) console.log(`  Test member:  GG-${TEST_MEMBER_NUMBER} / ${process.env.TEST_MEMBER_PASSWORD}`);
+  if (guestPassword) console.log(`  Guest admin:  GG-${GUEST_ADMIN_NUMBER} / ${guestPassword}  (view only)`);
 }
 
 async function seedProducts() {
@@ -310,7 +318,7 @@ async function seedDemoMembers() {
     const user = await db.user.upsert({
       where: { email },
       update: {},
-      create: { email, name: `Demo Member ${d.n}`, isDemo: true, phone: `0790000${String(d.n).padStart(3, "0")}` },
+      create: { email, name: `Demo Member ${d.n}`, isDemo: true, phone: `0790000${String(d.n).padStart(3, "0")}`, phoneDigits: `0790000${String(d.n).padStart(3, "0")}` },
     });
     const existing = await db.subscription.findFirst({ where: { userId: user.id } });
     if (existing) continue;

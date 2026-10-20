@@ -1,8 +1,9 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { ArrowUpRight, Phone } from "lucide-react";
-import { site, whatsappLink } from "@/config/site";
-import { media } from "@/config/media";
+import { site } from "@/config/site";
+import { getBusiness, whatsappHref } from "@/lib/business";
+import { getMedia } from "@/lib/media";
 import { Container, SectionHeading } from "@/components/ui/primitives";
 import { ButtonLink, ExternalButton } from "@/components/ui/Button";
 import { Photo } from "@/components/ui/Photo";
@@ -15,18 +16,14 @@ import { toPlanCard } from "@/features/billing/plan-data";
 import { getActivePlans } from "@/features/billing/membership";
 import { featuredProducts } from "@/features/shop/catalog";
 import { Link } from "@/lib/i18n/navigation";
+import { readOrNull } from "@/lib/db-status";
 
 /**
  * The home page is the shop window: if the database is unreachable, skip the
  * data-driven sections (and log) instead of taking the whole page down.
  */
 async function orEmpty<T>(what: string, load: () => Promise<T[]>): Promise<T[]> {
-  try {
-    return await load();
-  } catch (e) {
-    console.error(`[home] could not load ${what}; hiding the section`, e instanceof Error ? e.message : e);
-    return [];
-  }
+  return (await readOrNull(`home ${what}`, load)) ?? [];
 }
 
 export async function PackagesPreview({ locale }: { locale: string }) {
@@ -73,6 +70,7 @@ export async function FacilitiesStrip({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: "home.facilities" });
   const tf = await getTranslations({ locale, namespace: "facilities.items" });
   const tc = await getTranslations({ locale, namespace: "common" });
+  const media = await getMedia();
   const items = [
     { key: "weights", media: media.freeWeights },
     { key: "machines", media: media.machines },
@@ -103,6 +101,8 @@ export async function FacilitiesStrip({ locale }: { locale: string }) {
 export async function CoachesGrid({ locale, withHeading = true }: { locale: string; withHeading?: boolean }) {
   const t = await getTranslations({ locale, namespace: "home.coaches" });
   const tc = await getTranslations({ locale, namespace: "coaches" });
+  const media = await getMedia();
+  const coachPhoto = { ahmad: media.coachAhmad, amr: media.coachAmr, simon: media.coachSimon, zaid: media.coachZaid } as const;
   return (
     <section className="py-32" aria-labelledby={withHeading ? "coaches-title" : undefined}>
       <Container>
@@ -111,15 +111,16 @@ export async function CoachesGrid({ locale, withHeading = true }: { locale: stri
           {site.coaches.map((c, i) => (
             <Reveal as="li" key={c.key} index={i}>
               <TiltCard className="card overflow-hidden">
-                <div className="relative aspect-[3/4] bg-[radial-gradient(90%_70%_at_50%_20%,#1c2029,#07080a)]">
-                  {c.photo ? (
-                    <Image src={c.photo} alt={tc(c.key)} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover grayscale transition-[filter] duration-700 hover:grayscale-0" />
+                {/* Black & white until hovered (colour by default on touch screens, which can't hover). */}
+                <div className="group relative aspect-[3/4] overflow-hidden bg-[radial-gradient(90%_70%_at_50%_20%,#1c2029,#07080a)]">
+                  {coachPhoto[c.key].src ? (
+                    <Image src={coachPhoto[c.key].src!} alt={tc(c.key)} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover grayscale transition-[filter,transform] duration-700 group-hover:scale-[1.04] group-hover:grayscale-0 [@media(hover:none)]:grayscale-0" />
                   ) : (
                     <div role="img" aria-label={tc(c.key)} className="absolute inset-0 flex items-center justify-center">
                       <GGMark className="w-1/2 opacity-15" title="" />
                     </div>
                   )}
-                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
+                  <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
                 </div>
                 <div className="p-5">
                   <h3 className="font-medium">{tc(c.key)}</h3>
@@ -136,6 +137,7 @@ export async function CoachesGrid({ locale, withHeading = true }: { locale: stri
 
 export async function ConsultationCTA({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: "cta" });
+  const biz = await getBusiness();
   return (
     <section className="py-24">
       <Container>
@@ -148,17 +150,17 @@ export async function ConsultationCTA({ locale }: { locale: string }) {
               <p className="mt-3 text-lg text-muted">{t("subtitle")}</p>
             </div>
             <div className="flex flex-wrap items-center gap-6">
-              <ExternalButton href={whatsappLink(locale)} size="lg">
+              <ExternalButton href={whatsappHref(locale, biz)} size="lg">
                 {t("button")}
               </ExternalButton>
-              <a href={`tel:${site.phone.e164}`} className="flex items-center gap-3">
+              <a href={`tel:${biz.phone.e164}`} className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline-strong">
                   <Phone className="h-4 w-4 text-ember" aria-hidden />
                 </span>
                 <span>
                   <span className="block text-xs text-muted">{t("help")}</span>
                   <span className="tabular block font-semibold" dir="ltr">
-                    {site.phone.display}
+                    {biz.phone.display}
                   </span>
                 </span>
               </a>

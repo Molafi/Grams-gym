@@ -24,7 +24,7 @@ commit it to pin versions.
   weights, pointer parallax, scroll exit, RTL mirror). Each-Gram-Matters pinned story (weight → kettlebell → plate →
   barbell, 1 g → 20,000 g counter, 8+/2000+ stats). Procedural supplement packs with CanvasTexture labels from
   product data, optional GLB override, full-screen draggable viewer, fly-to-cart.
-- Auth.js: Google + test member/admin (env-gated, prod hard-block), JWT with role refresh, RBAC MEMBER/STAFF/ADMIN.
+- Auth.js: membership number + password (scrypt), self-registration, staff-issued temporary passwords, test member/admin (env-gated, prod hard-block), JWT with role refresh, RBAC MEMBER/STAFF/ADMIN.
 - Memberships: plan cards (tilt + flip + animated interval toggle), Lemon Squeezy hosted checkout, verified idempotent
   webhook for all 12 events, "confirming payment" polling, self-service cancel/resume, portal + update-card links,
   member card with QR, staff check-in (camera via BarcodeDetector or typed code).

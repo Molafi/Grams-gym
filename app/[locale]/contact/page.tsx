@@ -2,7 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Clock, MapPin, MessageCircle, Phone } from "lucide-react";
 import { FacebookIcon, InstagramIcon } from "@/components/ui/SocialIcons";
 import { pageMetadata, type PageProps } from "@/lib/metadata";
-import { site, whatsappLink } from "@/config/site";
+import { site } from "@/config/site";
+import { getBusiness, whatsappHref } from "@/lib/business";
 import { Container, SectionHeading } from "@/components/ui/primitives";
 import { ExternalButton } from "@/components/ui/Button";
 import { Reveal } from "@/components/motion/Reveal";
@@ -16,6 +17,7 @@ export default async function ContactPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "contact" });
+  const biz = await getBusiness();
   const th = await getTranslations({ locale, namespace: "hours" });
 
   return (
@@ -26,10 +28,10 @@ export default async function ContactPage({ params }: PageProps) {
           <Reveal index={0} className="card p-8">
             <Phone className="h-5 w-5 text-ember" aria-hidden />
             <h2 className="mt-5 text-sm text-muted">{t("phone")}</h2>
-            <a href={`tel:${site.phone.e164}`} className="display tabular mt-2 block text-3xl" dir="ltr">
-              {site.phone.display}
+            <a href={`tel:${biz.phone.e164}`} className="display tabular mt-2 block text-3xl" dir="ltr">
+              {biz.phone.display}
             </a>
-            <ExternalButton href={whatsappLink(locale)} className="mt-8" variant="glass">
+            <ExternalButton href={whatsappHref(locale, biz)} className="mt-8" variant="glass">
               <MessageCircle className="h-4 w-4" aria-hidden /> {t("whatsapp")}
             </ExternalButton>
           </Reveal>
@@ -37,7 +39,7 @@ export default async function ContactPage({ params }: PageProps) {
           <Reveal index={1} className="card p-8">
             <MapPin className="h-5 w-5 text-ember" aria-hidden />
             <h2 className="mt-5 text-sm text-muted">{t("address")}</h2>
-            <address className="mt-2 text-xl not-italic">{locale === "en" ? site.address.en : site.address.ar}</address>
+            <address className="mt-2 text-xl not-italic">{locale === "en" ? biz.address.en : biz.address.ar}</address>
             <ExternalButton href={site.maps.url} className="mt-8" variant="glass">
               {t("directions")}
             </ExternalButton>
@@ -58,7 +60,7 @@ export default async function ContactPage({ params }: PageProps) {
             <Clock className="h-5 w-5 text-ember" aria-hidden />
             <h2 className="mt-5 text-sm text-muted">{t("hours")}</h2>
             <dl className="mt-4 divide-y divide-hairline">
-              {site.hours.map((h) => (
+              {biz.hours.map((h) => (
                 <div key={h.key} className="flex items-center justify-between py-4">
                   <dt>{th(h.key)}</dt>
                   <dd className="tabular text-ember">{locale === "en" ? h.label.en : h.label.ar}</dd>

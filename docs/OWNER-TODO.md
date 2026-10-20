@@ -36,15 +36,14 @@ this use case. Sources: [Activate your store](https://docs.lemonsqueezy.com/help
 - [ ] JFDA registration number per product where applicable (field "Registration no.").
 - [ ] Optional: real 3D models (`.glb`, Draco-compressed) for hero products.
 
-## Assets (none of the original image files were in the files received)
-- [ ] **Vector logo (SVG/AI/PDF).** The GG monogram was rebuilt geometrically (two chamfered-octagon Gs); the flexed-arm
-      detail inside the letters is not reproduced. With the vector file, replace `lib/gg-geometry.ts` / extrude the SVG.
-- [ ] Hero / brand photo of the navy GG wall — ≥ 2400 px wide.
-- [ ] Facilities: free weights, machines, cardio, interior — ≥ 2000 px wide each (the old `gym-interior.jpg` and
-      `machines.jpg` had identical file sizes and may be duplicates).
-- [ ] Coach portraits (Ahmad, Amr, Simon, Zaid) — ≥ 1200 × 1600 px, consistent lighting. The old ones were ~10 KB.
-- [ ] Nutrition / meal-prep photo for the services page.
-- Drop files into `public/images/…` and set `src` in `config/media.ts` / `photo` in `config/site.ts`.
+## Assets (received — replace any of them in `/admin/media`)
+- [x] Logo (`public/images/logo.png`, 447 × 447, transparent) — used in the navbar, footer, sign-in, member card.
+      The 3D hero monogram is still a geometric rebuild; a vector (SVG/AI/PDF) logo would let it match exactly.
+- [x] Hero photo of the navy GG wall (1944 × 1296) — home page background.
+- [ ] **Higher-resolution photos.** Coach portraits, gym interior, machines and cardio are only **206 × 206 px** and
+      look soft at the sizes shown. Re-upload at ≥ 1200 px wide in `/admin/media`.
+- [ ] **Machines photo is the same file as the gym-interior photo** — upload a real machines photo.
+- [ ] Coach Ahmad's photo is a promotional graphic with text on it; a plain portrait would match the others better.
 
 ## Legal
 - [ ] Lawyer review of Terms, Privacy, Refunds, Delivery (`content/legal.ts`), then remove the DRAFT banner.

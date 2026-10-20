@@ -1,16 +1,19 @@
 import { getTranslations } from "next-intl/server";
 import { ArrowDown } from "lucide-react";
-import { whatsappLink } from "@/config/site";
+import { getBusiness, whatsappHref } from "@/lib/business";
 import { ButtonLink, ExternalButton } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/primitives";
 import { RevealText } from "@/components/motion/Reveal";
 import { Magnetic } from "@/components/motion/Magnetic";
+import { getMedia } from "@/lib/media";
 import { HeroStage } from "./HeroStage";
 
 export async function Hero({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: "home.hero" });
+  const media = await getMedia();
+  const biz = await getBusiness();
   return (
-    <HeroStage sceneLabel={t("sceneLabel")}>
+    <HeroStage sceneLabel={t("sceneLabel")} bgSrc={media.heroBg.src} logoSrc={media.logo.src}>
       <Eyebrow className="mb-8">{t("eyebrow")}</Eyebrow>
       <h1 className="display text-[clamp(3.2rem,9vw,8.5rem)]">
         <RevealText>{t("title")}</RevealText>
@@ -25,7 +28,7 @@ export async function Hero({ locale }: { locale: string }) {
             {t("ctaPrimary")}
           </ButtonLink>
         </Magnetic>
-        <ExternalButton href={whatsappLink(locale)} variant="glass" size="lg">
+        <ExternalButton href={whatsappHref(locale, biz)} variant="glass" size="lg">
           {t("ctaSecondary")}
         </ExternalButton>
       </div>

@@ -18,7 +18,11 @@ import { SceneProvider } from "@/components/3d/SceneProvider";
 import { Toaster } from "@/components/ui/Toaster";
 import { CartSync } from "@/features/shop/CartSync";
 import { localBusinessJsonLd } from "@/lib/seo";
+import { getMedia } from "@/lib/media";
+import { getBusiness } from "@/lib/business";
 import "../globals.css";
+import { readOrNull } from "@/lib/db-status";
+import { memo } from "@/lib/memo";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -58,17 +62,19 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+// Product names for the ⌘K search, on every page: cached for a minute.
+const palette = memo(60_000, () =>
+  db.product.findMany({
+    where: { active: true },
+    select: { slug: true, nameAr: true, nameEn: true, brand: true },
+    take: 100,
+    orderBy: { featured: "desc" },
+  }),
+);
+
 async function paletteProducts() {
-  try {
-    return await db.product.findMany({
-      where: { active: true },
-      select: { slug: true, nameAr: true, nameEn: true, brand: true },
-      take: 100,
-      orderBy: { featured: "desc" },
-    });
-  } catch {
-    return []; // the shell must render even if the DB is unreachable
-  }
+  // The shell must render (fast) even if the DB is unreachable.
+  return (await readOrNull("search palette", () => palette.get("all"))) ?? [];
 }
 
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
@@ -83,6 +89,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     getTranslations({ locale, namespace: "a11y" }),
   ]);
   const tc = await getTranslations({ locale, namespace: "contact" });
+  const media = await getMedia();
+  const biz = await getBusiness();
 
   return (
     <html lang={locale} dir={dirFor(locale)} className={fontVariables} suppressHydrationWarning>
@@ -90,14 +98,14 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         className="bg-bg text-ink"
         style={testAccountsEnabled ? ({ "--ribbon-h": "28px" } as React.CSSProperties) : undefined}
       >
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd(locale)) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd(locale, biz)).replace(/</g, "\\u003c") }} />
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ember focus:px-4 focus:py-2 focus:text-[#130800]">
           {ta("skip")}
         </a>
         <NextIntlClientProvider>
           <SceneProvider>
             {testAccountsEnabled ? <TestModeRibbon label={t("ribbon")} /> : null}
-            <Navbar user={user ? { name: user.name, role: user.role } : null} products={products} />
+            <Navbar user={user ? { name: user.name, role: user.role } : null} products={products} logoSrc={media.logo.src} />
             <main id="main" className="relative" style={{ paddingTop: "var(--ribbon-h, 0px)" }}>
               {children}
             </main>

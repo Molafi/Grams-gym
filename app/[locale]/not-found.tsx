@@ -1,14 +1,16 @@
 import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/primitives";
 import { ButtonLink } from "@/components/ui/Button";
-import { GGMark } from "@/components/ui/GGMark";
+import { Logo } from "@/components/ui/Logo";
+import { media } from "@/config/media";
 
 export default async function NotFound() {
   const t = await getTranslations("notFound");
   return (
     <section className="atmosphere flex min-h-[80vh] items-center pt-28">
       <Container className="text-center">
-        <GGMark className="mx-auto h-16 w-auto opacity-60" title="" />
+        {/* not-found can render without request context, so it uses the default logo file. */}
+        <Logo src={media.logo.src} className="mx-auto h-24 w-24 opacity-60" />
         <p className="display tabular mt-8 text-7xl text-ember" dir="ltr">
           404
         </p>

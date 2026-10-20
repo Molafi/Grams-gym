@@ -26,6 +26,12 @@ export function hit(key: string, limit: number, windowMs: number): { ok: boolean
   return { ok: b.count <= limit, retryAfter: Math.ceil((b.resetAt - now) / 1000) };
 }
 
+/** True if `key` already used up `limit` in its current window (does not count as a hit). */
+export function isLimited(key: string, limit: number): boolean {
+  const b = buckets.get(key);
+  return Boolean(b && b.resetAt > Date.now() && b.count >= limit);
+}
+
 export async function clientIp(): Promise<string> {
   const h = await headers();
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";

@@ -1,15 +1,22 @@
 # Setup
 
-## 1. Local (testing mode — no Google, no Lemon Squeezy needed)
+## 1. Local (testing mode: no Docker, no Lemon Squeezy needed)
+
+Two terminals, both in the project folder:
 
 ```bash
-cp .env.example .env          # defaults are fine for local testing
+# Terminal 1: the database. Keep it open while you work.
+npm run db:local              # local Postgres (Prisma), prints its DATABASE_URL
+
+# Terminal 2
+cp .env.example .env          # its DATABASE_URL already matches `npm run db:local`
 npm install                   # also runs `prisma generate`
-npm run db:up                 # Postgres 16 in Docker (docker-compose.yml)
-npx prisma migrate dev --name init   # creates prisma/migrations/ and the tables
-npm run db:seed               # plans, test users, 12 demo products, 8 demo members
-npm run dev                   # http://localhost:3000  → redirects to /ar
+npm run db:setup              # creates the tables + plans, test users, demo products/members
+npm run dev                   # http://localhost:3000, redirects to /ar
 ```
+
+Prefer Docker? `npm run db:up` starts Postgres from docker-compose.yml; set `DATABASE_URL` to the Docker address
+noted in `.env.example`.
 
 Then:
 - `/ar/signin` → **Continue as test member** or **Continue as test admin** (TEST MODE ribbon is visible).
@@ -26,18 +33,26 @@ Then:
 Quality checks: `npm run lint && npm run typecheck && npm test && npm run build` (or `npm run ci`).
 E2E: `npx playwright install chromium && npm run test:e2e` (needs the DB seeded and no LS keys in `.env`).
 
-## 2. Google sign-in
+## 2. Member sign-in (membership number + password)
+There is no Google sign-in. Everyone signs in at `/signin` with a **membership number** (shown as `GG-00042`)
+and a password.
+- **New members online:** "Create account" on the sign-in page (name, phone, optional email, password). The
+  membership number is shown right away on their account page.
+- **New members at the desk:** `/admin/subscriptions` → Add membership → **New member**. Staff get the membership
+  number and a **temporary password** to hand over; the member is asked to choose their own after signing in.
+- **Forgotten password:** `/admin/members` → **Reset password** gives a new temporary password.
+- **First admin:** `npm run admin:create -- "Owner Name" 0791234567` prints a membership number and temporary
+  password. Run it once against the production database (`DATABASE_URL`). Further staff/admins: change their role in
+  `/admin/members`.
 
-1. Google Cloud Console → APIs & Services → **OAuth consent screen**: External, app name "GRAMS GYM", support email,
-   authorised domain = your production domain. Scopes: `openid`, `email`, `profile`.
-2. **Credentials → Create credentials → OAuth client ID → Web application.**
-   - Authorised JavaScript origins: `http://localhost:3000`, `https://YOUR-DOMAIN`
-   - Authorised redirect URIs:
-     - `http://localhost:3000/api/auth/callback/google`
-     - `https://YOUR-DOMAIN/api/auth/callback/google`
-     - (Vercel previews, optional) `https://YOUR-PROJECT-git-BRANCH.vercel.app/api/auth/callback/google`
-3. Put the values in `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`. Set `AUTH_SECRET` (`npx auth secret`) and `AUTH_URL`.
-4. Publish the consent screen (Testing mode only allows listed test users).
+### Demo accounts
+| Account | Membership number | Password | Can |
+|---|---|---|---|
+| Test member | `GG-99001` | `TEST_MEMBER_PASSWORD` | everything a member can (test mode only) |
+| Guest admin | `GG-99002` | `GUEST_ADMIN_PASSWORD` (local default `guest-preview`) | **view** every admin page; saves, uploads, exports and check-ins are blocked |
+
+Both are created by `npm run db:seed` (or on first one-click sign-in) and listed on `/signin` in test mode. The guest
+admin works on a deployed site only with `ENABLE_GUEST_ADMIN=true` and is signed out as soon as that is turned off.
 
 ## 3. Lemon Squeezy (test mode)
 

@@ -17,7 +17,7 @@ export function ProfileForm({ defaults }: { defaults: { name: string; email: str
       </label>
       <label className="block">
         <span className="mb-1.5 block text-sm text-muted">{t("email")}</span>
-        <input value={defaults.email} readOnly disabled className="field opacity-60" dir="ltr" />
+        <input name="email" type="email" defaultValue={defaults.email} className="field" dir="ltr" autoComplete="email" />
       </label>
       <label className="block">
         <span className="mb-1.5 block text-sm text-muted">{t("phone")}</span>

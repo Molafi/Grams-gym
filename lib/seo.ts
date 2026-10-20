@@ -1,8 +1,9 @@
 import { site } from "@/config/site";
+import type { Business } from "@/lib/business";
 import { toMajorString } from "@/lib/money";
 
 /** SportsActivityLocation (a LocalBusiness subtype) with hours and address. */
-export function localBusinessJsonLd(locale: string) {
+export function localBusinessJsonLd(locale: string, biz: Business) {
   return {
     "@context": "https://schema.org",
     "@type": ["SportsActivityLocation", "ExerciseGym"],
@@ -10,16 +11,16 @@ export function localBusinessJsonLd(locale: string) {
     alternateName: locale === "en" ? site.nameAr : site.name,
     slogan: locale === "en" ? site.tagline.en : site.tagline.ar,
     url: `${site.url}/${locale}`,
-    telephone: site.phone.e164,
+    telephone: biz.phone.e164,
     sameAs: [site.social.facebook, site.social.instagram],
     hasMap: site.maps.url,
     address: {
       "@type": "PostalAddress",
-      streetAddress: locale === "en" ? site.address.en : site.address.ar,
+      streetAddress: locale === "en" ? biz.address.en : biz.address.ar,
       addressLocality: site.address.locality,
       addressCountry: site.address.country,
     },
-    openingHoursSpecification: site.hours.map((h) => ({
+    openingHoursSpecification: biz.hours.map((h) => ({
       "@type": "OpeningHoursSpecification",
       dayOfWeek: h.days.map((d) => `https://schema.org/${d}`),
       opens: h.opens,

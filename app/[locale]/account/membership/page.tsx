@@ -10,6 +10,8 @@ import { MembershipSummary } from "@/features/billing/MembershipSummary";
 import { CheckoutConfirming } from "@/features/billing/CheckoutConfirming";
 import { MemberCard } from "@/features/billing/MemberCard";
 import { cancelMembership, resumeMembership } from "@/features/billing/actions";
+import { getMedia } from "@/lib/media";
+import { formatMemberNumber } from "@/lib/member-number";
 
 export default async function MembershipPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -20,6 +22,7 @@ export default async function MembershipPage({ params, searchParams }: PageProps
   const t = await getTranslations({ locale, namespace: "membership" });
   const f = await getFormatter({ locale });
   const state = sub ? describe(sub) : null;
+  const media = await getMedia();
 
   const waiting = checkout === "success" && !state?.active;
 
@@ -103,6 +106,8 @@ export default async function MembershipPage({ params, searchParams }: PageProps
             planName={locale === "en" ? sub.plan.nameEn : sub.plan.nameAr}
             qrDataUrl={qr}
             memberCode={sub.memberCode}
+            memberNumber={formatMemberNumber(user.memberNumber)}
+            logoSrc={media.logo.src}
             validLabel={validLabel}
           />
         </Card>
