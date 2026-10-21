@@ -23,6 +23,12 @@ export const BUSINESS_FIELDS = [
 
 export type BusinessKey = (typeof BUSINESS_FIELDS)[number]["key"];
 
+/**
+ * One of the opening-hours rows ("satWed" | "thu" | "fri"). Kept as the literal union, not
+ * `string`, so `t(h.key)` type-checks against the `hours` messages namespace.
+ */
+export type HoursKey = (typeof site.hours)[number]["key"];
+
 export function businessDefaults(): Record<string, string> {
   return {
     phoneDisplay: site.phone.display,
@@ -47,7 +53,7 @@ export type Business = {
   phone: { display: string; e164: string };
   address: { ar: string; en: string; locality: string; country: string };
   whatsapp: { ar: string; en: string };
-  hours: { key: string; days: readonly string[]; opens: string; closes: string; label: { ar: string; en: string } }[];
+  hours: { key: HoursKey; days: readonly string[]; opens: string; closes: string; label: { ar: string; en: string } }[];
 };
 
 const settings = memo(60_000, () => db.siteSetting.findMany());
