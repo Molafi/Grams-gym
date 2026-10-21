@@ -18,6 +18,12 @@ async function main() {
     console.error('Usage: npm run admin:create -- "Full Name" 0791234567');
     process.exit(1);
   }
+  // tsx doesn't read .env (Next.js and the Prisma CLI do), so load it for DATABASE_URL.
+  try {
+    process.loadEnvFile(".env");
+  } catch {
+    /* no .env file (or Node < 20.12): use the environment as it is */
+  }
   const db = new PrismaClient({ datasourceUrl: prismaUrl() });
   try {
     const password = temporaryPassword();

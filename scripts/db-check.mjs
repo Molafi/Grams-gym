@@ -51,8 +51,14 @@ await new Promise((resolve) => {
 ok("The database server is running");
 
 // 3. Can Prisma log in and are the tables there?
-// Same rule as lib/db-url.ts: the local `prisma dev` server needs pgbouncer=true (no named statements).
-const runtime = /@(localhost|127\.0\.0\.1):512\d\d\//.test(url) && !/[?&]pgbouncer=/.test(url) ? `${url}${url.includes("?") ? "&" : "?"}pgbouncer=true` : url;
+// Same rule as lib/db-url.ts: the local `prisma dev` server needs unnamed statements and one connection.
+let runtime = url;
+if (/@(localhost|127\.0\.0\.1):512\d\d\//.test(url)) {
+  const u = new URL(url);
+  if (!u.searchParams.has("pgbouncer")) u.searchParams.set("pgbouncer", "true");
+  u.searchParams.set("connection_limit", "1");
+  runtime = u.toString();
+}
 const db = new PrismaClient({ datasourceUrl: runtime });
 try {
   await db.$queryRaw`SELECT 1`;
