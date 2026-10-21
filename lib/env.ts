@@ -49,6 +49,9 @@ const schema = z.object({
   MEMBERSHIP_GRACE_DAYS: z.coerce.number().int().min(0).max(30).default(3),
   DELIVERY_FEE_MINOR: z.coerce.number().int().min(0).default(2000),
 
+  /** Lets a script send member lists to POST /api/admin/import ("Authorization: Bearer <token>"). */
+  IMPORT_API_TOKEN: opt.refine((v) => v === undefined || v.length >= 24, "must be at least 24 characters"),
+
   RESEND_API_KEY: opt,
   EMAIL_FROM: opt,
 });

@@ -495,7 +495,8 @@
       "webhooks": "Webhooks",
       "audit": "Audit log",
       "content": "Website text",
-      "media": "Images"
+      "media": "Images",
+      "import": "Import"
     },
     "kpi": {
       "active": "Active members",
@@ -729,7 +730,80 @@
       }
     },
     "guestBanner": "You're signed in as a guest admin: you can look at everything, but nothing you change will be saved.",
-    "guestBlocked": "Guest admin is view only — this change wasn't saved."
+    "guestBlocked": "Guest admin is view only — this change wasn't saved.",
+    "import": {
+      "title": "Import members",
+      "intro": "Move members and their memberships over from the old gym program. Each member keeps their old number (04852 becomes GG-04852).",
+      "howTitle": "How to copy the data from the old program",
+      "how1": "Open the Subscriptions (or Members) list. If it has a filter, show all members, not only active ones.",
+      "how2": "Click any row in the table, then press Ctrl+A and Ctrl+C.",
+      "how3": "Click in the box below and press Ctrl+V. Or export the list to Excel, save it as \"CSV UTF-8\", and choose the file.",
+      "how4": "Press Preview, check the result, then Import. You can import again later: members are updated and nothing is duplicated.",
+      "pasteLabel": "Copied table or CSV",
+      "pastePlaceholder": "Member #\tMember\tGender\tMobile\tProgram\tFrom\tTo\n04852\t…",
+      "file": "Choose a file (.csv or .txt)",
+      "plan": "Plan for the imported memberships",
+      "planHint": "The old program's subscription name (for example \"1 Month 100\") is saved in each membership's notes.",
+      "preview": "Preview",
+      "import": "Import {count} members",
+      "columns": "Columns found",
+      "notFound": "not found",
+      "rows": "Rows",
+      "members": "Members",
+      "periods": "Memberships",
+      "activeNow": "Active now",
+      "dateOrder": "Dates read as",
+      "orders": {
+        "dmy": "day/month/year",
+        "mdy": "month/day/year",
+        "ymd": "year-month-day"
+      },
+      "sample": "First rows",
+      "skipped": "Rows skipped",
+      "warnings": "Rows imported without a membership",
+      "line": "Line {line}",
+      "reasons": {
+        "noNumber": "no member number",
+        "noName": "no name",
+        "badDate": "dates not understood",
+        "endBeforeStart": "end date is before the start date"
+      },
+      "fields": {
+        "number": "Member number",
+        "name": "Name",
+        "gender": "Gender",
+        "phone": "Mobile",
+        "program": "Program",
+        "from": "From",
+        "to": "To",
+        "frozen": "Frozen",
+        "offer": "Offer",
+        "notes": "Notes"
+      },
+      "done": "Import finished",
+      "created": "New members",
+      "updated": "Members updated",
+      "unchanged": "Members unchanged",
+      "subsCreated": "Memberships added",
+      "subsExisting": "Memberships already there",
+      "conflicts": "Not imported, because these numbers already belong to other accounts on this site: {numbers}",
+      "sharedPhones": "These members share a phone number with another member, so their phone can't be used to sign up online: {numbers}",
+      "renumbered": "{count} demo members were moved to new numbers to make room.",
+      "next": "Imported members can't sign in yet. When one asks, open Members, search their number, and press Reset password to give them a temporary password.",
+      "errors": {
+        "empty": "Paste the table or choose a file first.",
+        "noHeader": "Couldn't find the column titles. Copy the table including its title row (Member #, Member, Mobile…).",
+        "tooBig": "That's too much at once. Import it in two parts.",
+        "noPlan": "There are no membership plans yet. Run npm run db:setup first.",
+        "readOnly": "Guest admin is view only.",
+        "forbidden": "Only admins can import.",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    }
   },
   "legal": {
     "draft": "DRAFT — this document must be reviewed by a qualified lawyer in Jordan before going live.",

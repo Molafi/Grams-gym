@@ -57,6 +57,10 @@ and a password.
 Both are created by `npm run db:seed` (or on first one-click sign-in) and listed on `/signin` in test mode. The guest
 admin works on a deployed site only with `ENABLE_GUEST_ADMIN=true` and is signed out as soon as that is turned off.
 
+### Members from the old program
+`/admin/import` imports members and memberships copied or exported from the old desktop program, keeping their
+numbers. See [IMPORT.md](IMPORT.md).
+
 ## 3. Lemon Squeezy (test mode)
 
 > Read the approval risk in `docs/OWNER-TODO.md` first.

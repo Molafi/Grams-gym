@@ -85,6 +85,11 @@ enum ProductShape {
   box
 }
 
+enum Gender {
+  male
+  female
+}
+
 // ─── Users & Auth.js ────────────────────────────────────────────────────────
 
 model User {
@@ -109,6 +114,9 @@ model User {
   isTestAccount       Boolean   @default(false)
   /// Guest admin: can open every admin page but can't change anything (lib/auth/guards.ts).
   isGuest             Boolean   @default(false)
+  gender              Gender?
+  /// Set on members imported from the old gym program (admin → Import); re-imports update them.
+  importedAt          DateTime?
   isDemo              Boolean   @default(false)
   deletionRequestedAt DateTime?
   createdAt           DateTime  @default(now())
@@ -218,6 +226,8 @@ model Subscription {
   /// Opaque code encoded in the member-card QR.
   memberCode             String             @unique @default(cuid())
   notes                  String?
+  /// `legacy:<number>:<from>:<to>` for memberships imported from the old program (re-imports skip them).
+  importKey              String?            @unique
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
