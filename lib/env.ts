@@ -51,6 +51,9 @@ const schema = z.object({
 
   RESEND_API_KEY: opt,
   EMAIL_FROM: opt,
+
+  /** Shared secret for the legacy desktop-DB sync endpoint (/api/sync/legacy). */
+  SYNC_SECRET: opt,
 });
 
 export type Env = z.infer<typeof schema>;
@@ -94,6 +97,9 @@ export const guestAdminEnabled = Boolean(guestAdminPassword) && (testAdminEnable
 
 export const testDataAllowed = testAccountsEnabled || env.LEMONSQUEEZY_TEST_MODE;
 
+
+/** The legacy desktop-DB sync endpoint only accepts requests when a secret is set. */
+export const syncConfigured = Boolean(env.SYNC_SECRET && env.SYNC_SECRET.length >= 16);
 
 export const lemonSqueezyConfigured = Boolean(
   env.LEMONSQUEEZY_API_KEY && env.LEMONSQUEEZY_STORE_ID && env.LEMONSQUEEZY_WEBHOOK_SECRET,
