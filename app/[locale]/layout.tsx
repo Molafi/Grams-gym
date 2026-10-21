@@ -21,7 +21,7 @@ import { localBusinessJsonLd } from "@/lib/seo";
 import { getMedia } from "@/lib/media";
 import { getBusiness } from "@/lib/business";
 import "../globals.css";
-import { readOrNull } from "@/lib/db-status";
+import { optionalRead } from "@/lib/db-status";
 import { memo } from "@/lib/memo";
 
 export function generateStaticParams() {
@@ -74,7 +74,7 @@ const palette = memo(60_000, () =>
 
 async function paletteProducts() {
   // The shell must render (fast) even if the DB is unreachable.
-  return (await readOrNull("search palette", () => palette.get("all"))) ?? [];
+  return (await optionalRead("search palette", () => palette.get("all"))) ?? [];
 }
 
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {

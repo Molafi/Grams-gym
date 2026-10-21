@@ -1,14 +1,32 @@
 import "server-only";
 import { Prisma } from "@prisma/client";
 
-/** True when the error means "can't reach the database" (not a bug in a query). */
-export function isDbUnavailable(e: unknown): boolean {
-  if (e instanceof Prisma.PrismaClientInitializationError) return true;
-  if (e instanceof Prisma.PrismaClientKnownRequestError) return ["P1001", "P1002", "P1008", "P1017"].includes(e.code);
+type DbProblem = "down" | "notSetUp";
+
+/** "down" = can't reach the database; "notSetUp" = reachable but tables/columns missing. */
+function dbProblem(e: unknown): DbProblem | null {
+  if (e instanceof Prisma.PrismaClientInitializationError) return "down";
+  if (e instanceof Prisma.PrismaClientKnownRequestError) {
+    if (["P1001", "P1002", "P1008", "P1017"].includes(e.code)) return "down";
+    // P2021: table doesn't exist · P2022: column doesn't exist → `npm run db:setup` not run (or outdated).
+    if (e.code === "P2021" || e.code === "P2022") return "notSetUp";
+  }
   // Auth.js wraps errors thrown in `authorize` (CallbackRouteError → cause.err).
   const cause = (e as { cause?: { err?: unknown } } | null)?.cause;
-  return cause?.err !== undefined && cause.err !== e ? isDbUnavailable(cause.err) : false;
+  return cause?.err !== undefined && cause.err !== e ? dbProblem(cause.err) : null;
 }
+
+let lastProblem: DbProblem = "down";
+
+/** True when the database can't be used (down, or not set up yet) — not a bug in a query. */
+export function isDbUnavailable(e: unknown): boolean {
+  const p = dbProblem(e);
+  if (p) lastProblem = p;
+  return p !== null;
+}
+
+/** Short developer hint for the current database problem. */
+export const dbHint = () => (lastProblem === "notSetUp" ? "tables missing → npm run db:setup" : `no database at ${dbTarget()} → npm run db:check`);
 
 /*
  * Circuit breaker. Every failed connection attempt waits for a timeout (seconds). Once one
@@ -21,12 +39,28 @@ let lastWarning = 0;
 
 export const dbKnownDown = () => Date.now() < downUntil;
 
+/** Where the app is trying to connect ("localhost:51214"), without the password. */
+export function dbTarget(): string {
+  const raw = process.env.DATABASE_URL;
+  if (!raw) return "DATABASE_URL is not set";
+  try {
+    const u = new URL(raw.replace(/^"|"$/g, ""));
+    return `${u.hostname}:${u.port || "5432"}`;
+  } catch {
+    return "an invalid DATABASE_URL";
+  }
+}
+
 export function markDbDown(where: string) {
   downUntil = Date.now() + DOWN_FOR_MS;
   const now = Date.now();
   if (now - lastWarning < 60_000) return;
   lastWarning = now;
-  console.warn(`[db] Database unreachable (${where}). Showing defaults until it's running — see docs/SETUP.md.`);
+  console.warn(
+    lastProblem === "notSetUp"
+      ? `[db] The database has no tables yet (${where}). Stop the dev server and run \`npm run db:setup\`.`
+      : `[db] Can't reach the database at ${dbTarget()} (${where}). Is \`npm run db:local\` running, and does DATABASE_URL in .env match the address it prints? Run \`npm run db:check\`.`,
+  );
 }
 
 /** For `promise.catch(...)`: turns "database down" into `null`; real errors still throw. */
@@ -42,6 +76,28 @@ export const nullIfDbDown =
 export async function readOrNull<T>(where: string, load: () => Promise<T>): Promise<T | null> {
   if (dbKnownDown()) return null;
   return load().catch(nullIfDbDown(where));
+}
+
+let lastOptionalError = 0;
+
+/**
+ * For data that only decorates a page (text edits, uploaded images, business info, search
+ * list, home teasers): ANY failure falls back to the defaults (null) instead of breaking the
+ * whole page. Real bugs are still logged, at most once a minute.
+ */
+export async function optionalRead<T>(where: string, load: () => Promise<T>): Promise<T | null> {
+  if (dbKnownDown()) return null;
+  try {
+    return await load();
+  } catch (e) {
+    if (isDbUnavailable(e)) {
+      markDbDown(where);
+    } else if (Date.now() - lastOptionalError > 60_000) {
+      lastOptionalError = Date.now();
+      console.error(`[${where}] read failed; showing defaults`, e instanceof Error ? e.message.split("\n").filter(Boolean).pop() : e);
+    }
+    return null;
+  }
 }
 
 /** Logs a failed optional read: one short warning if the DB is down, the full error otherwise. */

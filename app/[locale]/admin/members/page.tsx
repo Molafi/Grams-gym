@@ -91,6 +91,7 @@ export default async function AdminMembersPage({ params, searchParams }: PagePro
                       <p className="text-xs text-muted" dir="ltr">
                         <span className="font-mono text-ember">{formatMemberNumber(u.memberNumber)}</span>
                         {u.phone ? ` · ${u.phone}` : ""}
+                        {u.gender ? ` · ${t(`gender.${u.gender}`)}` : ""}
                         {u.email ? ` · ${u.email}` : ""}
                       </p>
                       {!u.isTestAccount && (isAdmin || u.role === "MEMBER") ? (

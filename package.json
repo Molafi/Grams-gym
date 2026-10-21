@@ -18,6 +18,7 @@
     "postinstall": "prisma generate && node scripts/copy-draco.mjs",
     "db:local": "prisma dev",
     "db:setup": "prisma db push && prisma db seed",
+    "db:check": "node scripts/db-check.mjs",
     "db:up": "docker compose up -d db",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -66,12 +67,12 @@
     "vitest": "^3.2.0"
   },
   "allowScripts": {
-    "@swc/core@1.16.18": true,
-    "@prisma/client@6.16.3": true,
-    "prisma@6.16.3": true,
-    "@prisma/engines@6.16.3": true,
-    "esbuild@0.28.2": true,
-    "unrs-resolver@1.12.2": true,
-    "@parcel/watcher@2.6.0": true
+    "@swc/core": true,
+    "@prisma/client": true,
+    "prisma": true,
+    "@prisma/engines": true,
+    "esbuild": true,
+    "unrs-resolver": true,
+    "@parcel/watcher": true
   }
 }

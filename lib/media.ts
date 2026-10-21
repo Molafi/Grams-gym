@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { media, type MediaItem, type MediaKey } from "@/config/media";
-import { readOrNull } from "@/lib/db-status";
+import { optionalRead } from "@/lib/db-status";
 import { memo } from "@/lib/memo";
 
 export type ResolvedMedia = Record<MediaKey, MediaItem & { custom: boolean }>;
@@ -21,7 +21,7 @@ export const clearMediaCache = () => uploads.clear();
  */
 export const getMedia = cache(async (): Promise<ResolvedMedia> => {
   const out = Object.fromEntries(Object.entries(media).map(([k, v]) => [k, { ...v, custom: false }])) as ResolvedMedia;
-  const rows = (await readOrNull("images", () => uploads.get("all"))) ?? [];
+  const rows = (await optionalRead("images", () => uploads.get("all"))) ?? [];
   for (const r of rows) {
     if (!Object.hasOwn(out, r.key)) continue;
     const k = r.key as MediaKey;

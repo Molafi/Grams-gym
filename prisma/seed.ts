@@ -6,8 +6,9 @@
 import { PrismaClient, type ProductCategory, type ProductShape } from "@prisma/client";
 import { PLAN_SEEDS } from "../config/plans";
 import { ensureDemoAccounts, GUEST_ADMIN_NUMBER, TEST_MEMBER_NUMBER } from "../lib/demo-accounts";
+import { prismaUrl } from "../lib/db-url";
 
-const db = new PrismaClient();
+const db = new PrismaClient({ datasourceUrl: prismaUrl() });
 const DAY = 86_400_000;
 
 type DemoProduct = {

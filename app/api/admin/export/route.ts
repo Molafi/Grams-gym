@@ -40,7 +40,10 @@ export async function GET(req: Request) {
     ];
   } else if (type === "members") {
     const users = await db.user.findMany({ orderBy: { createdAt: "desc" } });
-    rows = [["member_number", "name", "email", "phone", "role", "locale", "created_at", "deletion_requested_at"], ...users.map((u) => [formatMemberNumber(u.memberNumber), u.name, u.email, u.phone, u.role, u.locale, u.createdAt, u.deletionRequestedAt])];
+    rows = [
+      ["member_number", "name", "email", "phone", "gender", "role", "locale", "created_at", "imported_at", "deletion_requested_at"],
+      ...users.map((u) => [formatMemberNumber(u.memberNumber), u.name, u.email, u.phone, u.gender, u.role, u.locale, u.createdAt, u.importedAt, u.deletionRequestedAt]),
+    ];
   } else if (type === "orders") {
     const orders = await db.order.findMany({ orderBy: { createdAt: "desc" }, include: { items: true } });
     rows = [

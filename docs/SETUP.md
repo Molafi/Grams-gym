@@ -12,8 +12,11 @@ npm run db:local              # local Postgres (Prisma), prints its DATABASE_URL
 cp .env.example .env          # its DATABASE_URL already matches `npm run db:local`
 npm install                   # also runs `prisma generate`
 npm run db:setup              # creates the tables + plans, test users, demo products/members
+npm run db:check              # optional: confirms the site can use the database
 npm run dev                   # http://localhost:3000, redirects to /ar
 ```
+
+On Windows, stop `npm run dev` before `npm run db:setup` (the running site locks a Prisma file).
 
 Prefer Docker? `npm run db:up` starts Postgres from docker-compose.yml; set `DATABASE_URL` to the Docker address
 noted in `.env.example`.
@@ -53,6 +56,10 @@ and a password.
 
 Both are created by `npm run db:seed` (or on first one-click sign-in) and listed on `/signin` in test mode. The guest
 admin works on a deployed site only with `ENABLE_GUEST_ADMIN=true` and is signed out as soon as that is turned off.
+
+### Members from the old program
+`/admin/import` imports members and memberships copied or exported from the old desktop program, keeping their
+numbers. See [IMPORT.md](IMPORT.md).
 
 ## 3. Lemon Squeezy (test mode)
 
