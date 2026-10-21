@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { assertRole, AuthError } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
 import { toMajorString } from "@/lib/money";
-import { SUBSCRIPTION_STATUSES } from "@/lib/membership";
+import { effectiveEndsAt, SUBSCRIPTION_STATUSES } from "@/lib/membership";
 import { listSubscriptions } from "@/features/admin/queries";
 import { formatMemberNumber } from "@/lib/member-number";
 
@@ -35,14 +35,28 @@ export async function GET(req: Request) {
     const within = Number(url.searchParams.get("within")) || undefined;
     const subs = await listSubscriptions({ q: url.searchParams.get("q") ?? undefined, status, withinDays: within });
     rows = [
-      ["member_number", "member", "email", "phone", "plan", "interval", "provider", "status", "active", "starts_at", "ends_or_renews_at", "days_left", "countdown_kind"],
-      ...subs.map((s) => [formatMemberNumber(s.user.memberNumber), s.user.name, s.user.email, s.user.phone, s.plan.slug, s.interval, s.provider, s.status, s.active, s.startsAt, s.endsAt ?? s.renewsAt, s.remaining.days, s.remaining.kind]),
+      ["member_number", "member", "email", "phone", "plan", "interval", "provider", "status", "active", "starts_at", "ends_or_renews_at", "bonus_days", "days_left", "countdown_kind"],
+      ...subs.map((s) => [formatMemberNumber(s.user.memberNumber), s.user.name, s.user.email, s.user.phone, s.plan.slug, s.interval, s.provider, s.status, s.active, s.startsAt, effectiveEndsAt(s) ?? s.renewsAt, s.bonusDays, s.remaining.days, s.remaining.kind]),
     ];
   } else if (type === "members") {
-    const users = await db.user.findMany({ orderBy: { createdAt: "desc" } });
+    const users = await db.user.findMany({ orderBy: { createdAt: "desc" }, include: { referredBy: { select: { memberNumber: true } } } });
     rows = [
-      ["member_number", "name", "email", "phone", "gender", "role", "locale", "created_at", "imported_at", "deletion_requested_at"],
-      ...users.map((u) => [formatMemberNumber(u.memberNumber), u.name, u.email, u.phone, u.gender, u.role, u.locale, u.createdAt, u.importedAt, u.deletionRequestedAt]),
+      ["member_number", "name", "email", "phone", "gender", "role", "locale", "pt_coach", "referred_by", "pending_bonus_days", "created_at", "imported_at", "deletion_requested_at"],
+      ...users.map((u) => [
+        formatMemberNumber(u.memberNumber),
+        u.name,
+        u.email,
+        u.phone,
+        u.gender,
+        u.role,
+        u.locale,
+        u.ptCoach,
+        u.referredBy ? formatMemberNumber(u.referredBy.memberNumber) : null,
+        u.pendingBonusDays,
+        u.createdAt,
+        u.importedAt,
+        u.deletionRequestedAt,
+      ]),
     ];
   } else if (type === "orders") {
     const orders = await db.order.findMany({ orderBy: { createdAt: "desc" }, include: { items: true } });

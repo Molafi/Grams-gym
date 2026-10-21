@@ -41,7 +41,8 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   );
 }
 
-export function RegisterForm({ callbackUrl }: { callbackUrl: string }) {
+/** `bonusHint`: the "add your email too and get a free day" line (empty when the reward is off). */
+export function RegisterForm({ callbackUrl, bonusHint = "" }: { callbackUrl: string; bonusHint?: string }) {
   const t = useTranslations("auth");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -71,6 +72,12 @@ export function RegisterForm({ callbackUrl }: { callbackUrl: string }) {
         <span className="mb-1.5 block text-sm text-muted">{t("confirmPassword")}</span>
         <input name="confirm" type="password" required minLength={8} autoComplete="new-password" className="field" dir="ltr" />
       </label>
+      <label className="block">
+        <span className="mb-1.5 block text-sm text-muted">{t("referrerOptional")}</span>
+        <input name="referrer" maxLength={20} placeholder="GG-00042" autoComplete="off" className="field" dir="ltr" />
+        <span className="mt-1 block text-xs text-muted">{t("referrerHint")}</span>
+      </label>
+      {bonusHint ? <p className="text-xs text-muted">{bonusHint}</p> : null}
       <ErrorLine state={state} />
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? tc("loading") : t("createAccount")}

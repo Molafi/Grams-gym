@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
-import { AlertTriangle, CreditCard, ExternalLink } from "lucide-react";
+import { AlertTriangle, CreditCard, ExternalLink, Gift } from "lucide-react";
 import { firstParam, type PageProps } from "@/lib/metadata";
 import { requireUser } from "@/lib/auth/guards";
 import { Card } from "@/components/ui/primitives";
@@ -12,6 +12,7 @@ import { MemberCard } from "@/features/billing/MemberCard";
 import { cancelMembership, resumeMembership } from "@/features/billing/actions";
 import { getMedia } from "@/lib/media";
 import { formatMemberNumber } from "@/lib/member-number";
+import { db } from "@/lib/db";
 
 export default async function MembershipPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -20,9 +21,17 @@ export default async function MembershipPage({ params, searchParams }: PageProps
   const checkout = firstParam((await searchParams).checkout);
   const sub = await getCurrentSubscription(user.id);
   const t = await getTranslations({ locale, namespace: "membership" });
+  const tc = await getTranslations({ locale, namespace: "common" });
   const f = await getFormatter({ locale });
   const state = sub ? describe(sub) : null;
   const media = await getMedia();
+  const pendingBonus = (await db.user.findUnique({ where: { id: user.id }, select: { pendingBonusDays: true } }))?.pendingBonusDays ?? 0;
+  const pendingNote =
+    pendingBonus > 0 ? (
+      <p role="status" className="card flex items-center gap-3 border-ember/40 p-5 text-sm">
+        <Gift className="h-5 w-5 shrink-0 text-ember" aria-hidden /> {t("bonusPending", { days: tc("days", { count: pendingBonus }) })}
+      </p>
+    ) : null;
 
   const waiting = checkout === "success" && !state?.active;
 
@@ -30,6 +39,7 @@ export default async function MembershipPage({ params, searchParams }: PageProps
     return (
       <div className="space-y-6">
         {waiting ? <CheckoutConfirming /> : null}
+        {pendingNote}
         <Card className="p-8">
           <p className="text-muted">{t("none")}</p>
           <ButtonLink href="/packages" className="mt-5">
@@ -54,8 +64,16 @@ export default async function MembershipPage({ params, searchParams }: PageProps
         </div>
       ) : null}
 
+      {pendingNote}
+
       <Card className="p-7">
         <MembershipSummary sub={sub} locale={locale} {...state} />
+        {sub.bonusDays > 0 ? (
+          <p className="mt-6 flex items-center gap-2 text-sm">
+            <Gift className="h-4 w-4 text-ember" aria-hidden />
+            {isLs && !sub.cancelled ? t("bonusAfterCard", { days: tc("days", { count: sub.bonusDays }) }) : t("bonusIncluded", { days: tc("days", { count: sub.bonusDays }) })}
+          </p>
+        ) : null}
         {sub.cardLastFour ? (
           <p className="mt-6 flex items-center gap-2 text-sm text-muted">
             <CreditCard className="h-4 w-4" aria-hidden /> {t("card")}:{" "}

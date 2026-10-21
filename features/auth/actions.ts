@@ -15,6 +15,7 @@ import { audit } from "@/lib/audit";
 import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit";
 import { dbKnownDown, isDbUnavailable, markDbDown } from "@/lib/db-status";
 import { phoneDigits } from "@/lib/phone";
+import { findReferrer, giveContactBonus, linkReferral } from "@/lib/rewards";
 
 function safeCallback(raw: FormDataEntryValue | null, locale: string) {
   const v = typeof raw === "string" ? raw : "";
@@ -28,7 +29,7 @@ function localeOf(formData: FormData) {
 }
 
 export type AuthFormState = {
-  error?: "credentials" | "rate" | "invalid" | "mismatch" | "phoneTaken" | "emailTaken" | "weak" | "current" | "generic" | "db";
+  error?: "credentials" | "rate" | "invalid" | "mismatch" | "phoneTaken" | "emailTaken" | "weak" | "current" | "generic" | "db" | "referrer";
   ok?: boolean;
 };
 
@@ -74,6 +75,8 @@ const registerSchema = z
     email: z.string().trim().toLowerCase().email().max(120).optional(),
     password: z.string().min(PASSWORD_MIN).max(200),
     confirm: z.string(),
+    /** Membership number of the friend who invited them (optional). */
+    referrer: z.string().trim().max(20).optional(),
   })
   .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "mismatch" });
 
@@ -88,12 +91,24 @@ export async function registerMember(_prev: AuthFormState, formData: FormData): 
     email: formData.get("email") || undefined,
     password: formData.get("password"),
     confirm: formData.get("confirm"),
+    referrer: formData.get("referrer") || undefined,
   });
   if (!parsed.success) {
     const paths = parsed.error.issues.map((i) => i.path[0]);
-    return { error: paths.includes("confirm") ? "mismatch" : paths.includes("password") ? "weak" : "invalid" };
+    return { error: paths.includes("confirm") ? "mismatch" : paths.includes("password") ? "weak" : paths.includes("referrer") ? "referrer" : "invalid" };
   }
   const input = parsed.data;
+
+  // Check the inviter's number before creating the account, so a typo can be fixed.
+  if (input.referrer) {
+    try {
+      const referrer = await findReferrer(input.referrer);
+      if (!referrer || referrer.isGuest || referrer.isTestAccount) return { error: "referrer" };
+    } catch (e) {
+      if (dbDown(e, "registration")) return { error: "db" };
+      throw e;
+    }
+  }
 
   // One account per phone (phoneDigits is unique). If the gym already registered this phone
   // at the desk, the member collects their number there: letting anyone "claim" an account
@@ -113,6 +128,12 @@ export async function registerMember(_prev: AuthFormState, formData: FormData): 
     });
     number = user.memberNumber;
     await audit(user.id, "user.register", "User", user.id);
+    // Rewards are extras: a problem here must never block the sign-up itself.
+    if (input.referrer) {
+      await linkReferral(user.id, input.referrer).catch((err) => console.error("[rewards] referral at registration", err));
+    }
+    // Phone is required; the bonus applies when an email was given too.
+    await giveContactBonus(user.id).catch((err) => console.error("[rewards] contact bonus at registration", err));
   } catch (e) {
     if (dbDown(e, "registration")) return { error: "db" };
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {

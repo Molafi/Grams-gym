@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { OrderStatus, Prisma } from "@prisma/client";
+import { Prisma, type OrderStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { assertRole } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
-import { addMonths } from "@/lib/membership";
+import { addMonths, effectiveEndsAt, extensionBase } from "@/lib/membership";
 import { isMembershipActive, remainingFor } from "@/features/billing/membership";
+import { onMembershipChanged } from "@/lib/rewards";
 import { toMinor } from "@/lib/money";
 import { INTERVAL_MONTHS } from "@/config/plans";
 import { processStoredEvent } from "@/lib/payments/lemonsqueezy-events";
@@ -23,6 +24,10 @@ export type AdminState = {
   memberNumber?: string;
   tempPassword?: string;
   name?: string | null;
+  /** createStaffAccount: an existing member was given the role (no new account). */
+  promoted?: boolean;
+  /** createStaffAccount: the phone belongs to this member — ask the admin to confirm first. */
+  confirm?: { memberNumber: string; name: string | null; phone: string; role: "STAFF" | "ADMIN" };
 };
 
 const locale = (fd: FormData) => (fd.get("locale") === "en" ? "en" : "ar");
@@ -105,8 +110,13 @@ export async function grantMembership(_prev: AdminState, fd: FormData): Promise<
   const months = INTERVAL_MONTHS[input.interval];
 
   if (existing && existing.endsAt) {
-    const endsAt = addMonths(existing.endsAt, months);
-    await db.subscription.update({ where: { id: existing.id }, data: { endsAt, planId: plan.id, interval: input.interval, status: "active", cancelled: false } });
+    const { base, foldBonus } = extensionBase(existing, now);
+    const endsAt = addMonths(base, months);
+    await db.subscription.update({
+      where: { id: existing.id },
+      // Folded days are subtracted (not reset to 0) so a reward landing meanwhile is kept.
+      data: { endsAt, planId: plan.id, interval: input.interval, status: "active", cancelled: false, ...(foldBonus ? { bonusDays: { decrement: existing.bonusDays } } : {}) },
+    });
     await audit(actor.id, "membership.extend", "Subscription", existing.id, { months, endsAt: endsAt.toISOString() });
   } else {
     const startsAt = input.start ?? now;
@@ -123,6 +133,8 @@ export async function grantMembership(_prev: AdminState, fd: FormData): Promise<
     });
     await audit(actor.id, "membership.grant", "Subscription", sub.id, { plan: plan.slug, interval: input.interval });
   }
+  // Saved bonus days move onto the membership; whoever invited this member gets their reward.
+  await onMembershipChanged(user.id);
   revalidateAdmin(fd);
   return { ok: true, memberNumber: formatMemberNumber(user.memberNumber), tempPassword, name: user.name };
 }
@@ -150,10 +162,12 @@ export async function extendMembership(fd: FormData): Promise<void> {
   const months = z.coerce.number().int().min(1).max(24).parse(fd.get("months"));
   const sub = await db.subscription.findUniqueOrThrow({ where: { id } });
   if (sub.provider !== "manual") throw new Error("Only manual memberships can be extended here");
-  const base = sub.endsAt && sub.endsAt > new Date() ? sub.endsAt : new Date();
+  const { base, foldBonus } = extensionBase(sub, new Date());
   const endsAt = addMonths(base, months);
-  await db.subscription.update({ where: { id }, data: { endsAt, status: "active", cancelled: false } });
+  // Folded days are subtracted (not reset to 0) so a reward landing meanwhile is kept.
+  await db.subscription.update({ where: { id }, data: { endsAt, status: "active", cancelled: false, ...(foldBonus ? { bonusDays: { decrement: sub.bonusDays } } : {}) } });
   await audit(actor.id, "membership.extend", "Subscription", id, { months, endsAt: endsAt.toISOString() });
+  await onMembershipChanged(sub.userId);
   revalidateAdmin(fd);
 }
 
@@ -174,9 +188,84 @@ export async function changeRole(fd: FormData): Promise<void> {
   const id = String(fd.get("id"));
   const role = z.enum(["MEMBER", "STAFF", "ADMIN"]).parse(fd.get("role"));
   if (id === actor.id) throw new Error("You cannot change your own role");
+  const target = await db.user.findUniqueOrThrow({ where: { id }, select: { isGuest: true, isTestAccount: true } });
+  // The shared view-only guest and the test logins keep the role they were built with.
+  if (target.isGuest || target.isTestAccount) throw new Error("This account's role can't be changed");
   await db.user.update({ where: { id }, data: { role } });
   await audit(actor.id, "user.role", "User", id, { role });
   revalidateAdmin(fd);
+}
+
+const staffSchema = z.object({
+  /** Only required when creating a new account (not when confirming an existing member). */
+  name: z.string().trim().min(2).max(80).optional(),
+  phone: z.string().trim().regex(/^[+0-9 ()-]{7,20}$/),
+  email: z.string().trim().toLowerCase().email().max(120).optional(),
+  role: z.enum(["STAFF", "ADMIN"]),
+  /** The existing member's number, sent back from the confirmation step. */
+  confirmNumber: z.string().trim().max(20).optional(),
+});
+
+/**
+ * Admins add other admins / front-desk staff. A new person gets a membership number and a
+ * temporary password (changed on first sign-in). If the phone already belongs to a member,
+ * the admin first sees who that is and must confirm before the member gets the role (a
+ * mistyped digit must never hand admin rights to a stranger).
+ */
+export async function createStaffAccount(_prev: AdminState, fd: FormData): Promise<AdminState> {
+  const actor = await assertRole("ADMIN");
+  const parsed = staffSchema.safeParse({
+    name: fd.get("name") || undefined,
+    phone: fd.get("phone"),
+    email: fd.get("email") || undefined,
+    role: fd.get("role"),
+    confirmNumber: fd.get("confirmNumber") || undefined,
+  });
+  if (!parsed.success) return { error: "invalid" };
+  const { name, phone, email, role, confirmNumber } = parsed.data;
+  const digits = phoneDigits(phone);
+
+  const existing = await db.user.findUnique({
+    where: { phoneDigits: digits },
+    select: { id: true, name: true, memberNumber: true, passwordHash: true, isGuest: true, isTestAccount: true },
+  });
+  if (existing) {
+    if (existing.id === actor.id) return { error: "self" };
+    if (existing.isGuest || existing.isTestAccount) return { error: "protected" };
+    const number = formatMemberNumber(existing.memberNumber);
+    if (confirmNumber !== number) return { confirm: { memberNumber: number, name: existing.name, phone, role } };
+    // Someone who never had a password (e.g. imported from the old program) needs one to sign in.
+    let tempPassword: string | undefined;
+    if (!existing.passwordHash) tempPassword = temporaryPassword();
+    await db.user.update({
+      where: { id: existing.id },
+      data: {
+        role,
+        ...(tempPassword ? { passwordHash: await hashPassword(tempPassword), mustChangePassword: true } : {}),
+      },
+    });
+    await audit(actor.id, "user.role", "User", existing.id, { role, via: "team-form" });
+    revalidateAdmin(fd);
+    return { ok: true, promoted: true, memberNumber: formatMemberNumber(existing.memberNumber), tempPassword, name: existing.name };
+  }
+
+  if (!name) return { error: "invalid" };
+  const tempPassword = temporaryPassword();
+  try {
+    const user = await db.user.create({
+      data: { name, phone, phoneDigits: digits, email: email ?? null, role, passwordHash: await hashPassword(tempPassword), mustChangePassword: true },
+      select: { id: true, memberNumber: true, name: true },
+    });
+    await audit(actor.id, "user.create_staff", "User", user.id, { memberNumber: user.memberNumber, role });
+    revalidateAdmin(fd);
+    return { ok: true, memberNumber: formatMemberNumber(user.memberNumber), tempPassword, name: user.name };
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const target = String((e.meta as { target?: unknown } | undefined)?.target ?? "");
+      return { error: target.includes("phone") ? "phoneTaken" : "emailExists" };
+    }
+    throw e;
+  }
 }
 
 /* ─── Orders ─────────────────────────────────────────────────────────────── */
@@ -483,6 +572,6 @@ export async function checkInMember(_prev: CheckInResult | null, fd: FormData): 
     result: allowed ? "allowed" : "denied",
     name: sub.user.name ?? sub.user.email,
     plan: { ar: shown.plan.nameAr, en: shown.plan.nameEn },
-    endsAt: (shown.endsAt ?? shown.renewsAt)?.toISOString() ?? null,
+    endsAt: (effectiveEndsAt(shown) ?? shown.renewsAt)?.toISOString() ?? null,
   };
 }

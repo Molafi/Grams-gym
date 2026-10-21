@@ -119,6 +119,18 @@ model User {
   importedAt          DateTime?
   isDemo              Boolean   @default(false)
   deletionRequestedAt DateTime?
+  /// Personal-training coach the member chose (a key from config/site.ts → coaches).
+  ptCoach             String?
+  ptCoachSetAt        DateTime?
+  /// The member who invited this one (entered as their membership number). See lib/referral.ts.
+  referredById        String?
+  referredAt          DateTime?
+  /// When the inviter got their reward (once, after this member's first membership started).
+  referralRewardedAt  DateTime?
+  /// When the one-time "email + phone on file" bonus was given.
+  contactBonusAt      DateTime?
+  /// Bonus days earned while the member had no membership; added to their next one (lib/rewards.ts).
+  pendingBonusDays    Int       @default(0)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -129,9 +141,13 @@ model User {
   cart          Cart?
   auditLogs     AuditLog[]     @relation("AuditActor")
   checkIns      CheckIn[]      @relation("CheckInMember")
+  referredBy    User?          @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals     User[]         @relation("Referrals")
 
   @@index([role])
   @@index([createdAt])
+  @@index([referredById])
+  @@index([ptCoach])
 }
 
 model Account {
@@ -228,6 +244,9 @@ model Subscription {
   notes                  String?
   /// `legacy:<number>:<from>:<to>` for memberships imported from the old program (re-imports skip them).
   importKey              String?            @unique
+  /// Free days on top of the end date (referrals, contact bonus). Webhooks never overwrite it,
+  /// so it also works for card subscriptions (lib/membership.ts → effectiveEndsAt).
+  bonusDays              Int                @default(0)
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 

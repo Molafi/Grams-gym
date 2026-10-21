@@ -21,17 +21,26 @@ const sizes: Record<Size, string> = {
   lg: "h-14 px-8 text-base",
 };
 
-export function buttonClass(variant: Variant = "primary", size: Size = "md", extra = "") {
-  return `${base} ${variants[variant]} ${sizes[size]} ${extra}`;
+/** Same sizes for buttons whose label may wrap onto a second line (long labels in narrow boxes). */
+const wrapSizes: Record<Size, string> = {
+  sm: "min-h-9 px-4 py-1.5 text-sm",
+  md: "min-h-11 px-5 py-2.5 text-[0.95rem]",
+  lg: "min-h-14 px-6 py-3 text-base",
+};
+const wrapBase = base.replace("whitespace-nowrap", "whitespace-normal text-center leading-snug");
+
+export function buttonClass(variant: Variant = "primary", size: Size = "md", extra = "", wrap = false) {
+  return `${wrap ? wrapBase : base} ${variants[variant]} ${(wrap ? wrapSizes : sizes)[size]} ${extra}`;
 }
 
 export function Button({
   variant = "primary",
   size = "md",
+  wrap = false,
   className = "",
   ...props
-}: ComponentProps<"button"> & { variant?: Variant; size?: Size }) {
-  return <button className={buttonClass(variant, size, className)} {...props} />;
+}: ComponentProps<"button"> & { variant?: Variant; size?: Size; wrap?: boolean }) {
+  return <button className={buttonClass(variant, size, className, wrap)} {...props} />;
 }
 
 export function ButtonLink({
