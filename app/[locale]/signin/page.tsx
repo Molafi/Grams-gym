@@ -7,7 +7,6 @@ import { formatMemberNumber } from "@/lib/member-number";
 import { dbHint } from "@/lib/db-status";
 import { getSessionUser } from "@/lib/auth/guards";
 import { redirect } from "@/lib/i18n/navigation";
-import { Container } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { getMedia } from "@/lib/media";
@@ -37,11 +36,13 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
   const t = await getTranslations({ locale, namespace: "auth" });
   const tc = await getTranslations({ locale, namespace: "common" });
   const media = await getMedia();
+  const bonusHint = env.CONTACT_BONUS_DAYS > 0 ? t("contactBonusHint", { days: tc("days", { count: env.CONTACT_BONUS_DAYS }) }) : "";
 
   return (
-    <section className="atmosphere flex min-h-[90vh] items-center pb-24 pt-36">
-      <Container className="max-w-md">
-        <div className="card p-8 sm:p-10">
+    <section className="atmosphere flex min-h-[90vh] items-center pb-24 pt-32 sm:pt-36">
+      {/* A plain wrapper (not <Container>) so the card width is exactly this max-width. */}
+      <div className="mx-auto w-full max-w-[30rem] px-4 sm:px-5">
+        <div className="card p-6 sm:p-10">
           <Logo src={media.logo.src} className="h-16 w-16" />
           <h1 className="display mt-6 text-3xl">{mode === "register" ? t("registerTitle") : t("title")}</h1>
           <p className="mt-3 text-muted">{mode === "register" ? t("registerSubtitle") : t("subtitle")}</p>
@@ -58,7 +59,7 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
           ) : null}
 
           <div className="mt-8">
-            {mode === "register" ? <RegisterForm callbackUrl={callbackUrl} /> : <SignInForm callbackUrl={callbackUrl} />}
+            {mode === "register" ? <RegisterForm callbackUrl={callbackUrl} bonusHint={bonusHint} /> : <SignInForm callbackUrl={callbackUrl} />}
           </div>
           <p className="mt-6 text-center text-sm text-muted">
             {mode === "register" ? t("haveNumber") : t("noNumber")}{" "}
@@ -70,56 +71,57 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
             </Link>
           </p>
 
+          {/* Build phase only: gone everywhere once ENABLE_TEST_ACCOUNT=false (see docs/GO-LIVE-CHECKLIST.md). */}
           {testAccountsEnabled ? (
-            <div className="mt-8 rounded-2xl border border-dashed border-ember/50 bg-ember/[.04] p-5">
+            <div className="mt-8 rounded-2xl border border-dashed border-ember/50 bg-ember/[.04] p-4 sm:p-5">
               <p className="flex items-center gap-2 text-sm font-medium text-ember">
-                <FlaskConical className="h-4 w-4" aria-hidden /> {t("testTitle")}
+                <FlaskConical className="h-4 w-4 shrink-0" aria-hidden /> {t("testTitle")}
               </p>
-              <div className="mt-4 grid gap-2">
-                <form action={signInAsTestAccount}>
+              <div className="mt-4 grid min-w-0 gap-2">
+                <form action={signInAsTestAccount} className="min-w-0">
                   <input type="hidden" name="locale" value={locale} />
                   <input type="hidden" name="kind" value="member" />
                   <input type="hidden" name="callbackUrl" value={callbackUrl} />
-                  <Button type="submit" className="w-full" data-testid="test-member-login">
-                    <UserRound className="h-4 w-4" aria-hidden /> {t("testMember")}
+                  <Button type="submit" wrap className="w-full" data-testid="test-member-login">
+                    <UserRound className="h-4 w-4 shrink-0" aria-hidden /> {t("testMember")}
                   </Button>
                 </form>
                 {testAdminEnabled ? (
-                  <form action={signInAsTestAccount}>
+                  <form action={signInAsTestAccount} className="min-w-0">
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="kind" value="admin" />
                     <input type="hidden" name="callbackUrl" value={callbackUrl} />
-                    <Button type="submit" variant="glass" className="w-full" data-testid="test-admin-login">
-                      <ShieldCheck className="h-4 w-4" aria-hidden /> {t("testAdmin")}
+                    <Button type="submit" variant="glass" wrap className="w-full" data-testid="test-admin-login">
+                      <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden /> {t("testAdmin")}
                     </Button>
                   </form>
                 ) : null}
                 {testAdminEnabled && guestAdminEnabled ? (
-                  <form action={signInAsGuestAdmin}>
+                  <form action={signInAsGuestAdmin} className="min-w-0">
                     <input type="hidden" name="locale" value={locale} />
-                    <Button type="submit" variant="glass" className="w-full" data-testid="guest-admin-login">
-                      <Eye className="h-4 w-4" aria-hidden /> {t("testGuest")}
+                    <Button type="submit" variant="glass" wrap className="w-full" data-testid="guest-admin-login">
+                      <Eye className="h-4 w-4 shrink-0" aria-hidden /> {t("testGuest")}
                     </Button>
                   </form>
                 ) : null}
               </div>
               {/* The same accounts also work in the form above (handy for sharing with someone). */}
-              <dl className="mt-4 grid gap-1 font-mono text-xs text-muted" dir="ltr">
+              <dl className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 font-mono text-xs text-muted" dir="ltr">
                 {env.TEST_MEMBER_PASSWORD ? (
-                  <div className="flex justify-between gap-3">
-                    <dt>{t("testMemberShort")}</dt>
-                    <dd>
-                      {formatMemberNumber(TEST_MEMBER_NUMBER)} · {env.TEST_MEMBER_PASSWORD}
+                  <>
+                    <dt className="whitespace-nowrap">{t("testMemberShort")}</dt>
+                    <dd className="break-all text-end">
+                      <span className="whitespace-nowrap text-ink">{formatMemberNumber(TEST_MEMBER_NUMBER)}</span> · {env.TEST_MEMBER_PASSWORD}
                     </dd>
-                  </div>
+                  </>
                 ) : null}
                 {testAdminEnabled && guestAdminEnabled && guestAdminPassword ? (
-                  <div className="flex justify-between gap-3">
-                    <dt>{t("testGuestShort")}</dt>
-                    <dd>
-                      {formatMemberNumber(GUEST_ADMIN_NUMBER)} · {guestAdminPassword}
+                  <>
+                    <dt className="whitespace-nowrap">{t("testGuestShort")}</dt>
+                    <dd className="break-all text-end">
+                      <span className="whitespace-nowrap text-ink">{formatMemberNumber(GUEST_ADMIN_NUMBER)}</span> · {guestAdminPassword}
                     </dd>
-                  </div>
+                  </>
                 ) : null}
               </dl>
               <p className="mt-3 text-xs text-muted">{t("testNote")}</p>
@@ -141,7 +143,7 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
             })}
           </p>
         </div>
-      </Container>
+      </div>
     </section>
   );
 }

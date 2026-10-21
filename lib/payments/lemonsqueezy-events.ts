@@ -6,6 +6,7 @@ import { env, lemonSqueezyConfigured, planForVariant, testDataAllowed } from "@/
 import { closeOrder, reopenOrder, ReopenStockError } from "@/lib/orders";
 import { toStoreMinor } from "./currency";
 import { normaliseLsStatus } from "@/lib/membership";
+import { onMembershipChanged } from "@/lib/rewards";
 import { eventHash } from "./signature";
 
 /** Events we act on. Anything else is stored and marked processed. */
@@ -158,6 +159,8 @@ async function upsertSubscription(evt: ParsedEvent) {
   });
   // Link invoices that arrived before this subscription existed.
   await db.payment.updateMany({ where: { lsSubscriptionId: lsId, subscriptionId: null }, data: { subscriptionId: saved.id } });
+  // Saved bonus days move onto the membership; the member's inviter gets their reward.
+  await onMembershipChanged(userId);
 }
 
 async function recordInvoice(evt: ParsedEvent) {

@@ -57,6 +57,11 @@ const schema = z.object({
 
   /** Shared secret for the legacy desktop-DB sync endpoint (/api/sync/legacy). */
   SYNC_SECRET: opt,
+
+  /** Free days for the inviter when an invited member's first membership starts. 0 = off. */
+  REFERRAL_BONUS_DAYS: z.coerce.number().int().min(0).max(90).default(7),
+  /** One-time free days for having both an email and a phone number on file. 0 = off. */
+  CONTACT_BONUS_DAYS: z.coerce.number().int().min(0).max(30).default(1),
 });
 
 export type Env = z.infer<typeof schema>;

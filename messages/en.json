@@ -307,7 +307,10 @@
     "memberCardHint": "Show this QR at the front desk.",
     "flipCard": "Flip card",
     "graceNote": "Your last payment failed. Update your card to keep your access.",
-    "simulated": "Simulated test subscription — there is no Lemon Squeezy billing portal for it."
+    "simulated": "Simulated test subscription — there is no Lemon Squeezy billing portal for it.",
+    "bonusIncluded": "Includes {days} free (bonus).",
+    "bonusAfterCard": "{days} free (bonus) will be added when your card membership ends.",
+    "bonusPending": "You have {days} free waiting — they'll be added to your next membership."
   },
   "shop": {
     "eyebrow": "Supplement store",
@@ -452,11 +455,15 @@
       "weak": "The password must be at least 8 characters.",
       "current": "Your current password is wrong.",
       "generic": "Something went wrong. Please try again.",
-      "db": "The database isn't available, so nobody can sign in right now. Please try again shortly."
+      "db": "The database isn't available, so nobody can sign in right now. Please try again shortly.",
+      "referrer": "We couldn't find your friend's membership number. Check it, or leave the field empty."
     },
     "testGuest": "Continue as guest admin (view only)",
     "testMemberShort": "Test member",
-    "testGuestShort": "Guest admin"
+    "testGuestShort": "Guest admin",
+    "referrerOptional": "Friend's membership number (optional)",
+    "referrerHint": "If a friend invited you, enter their number. They get free days when your membership starts.",
+    "contactBonusHint": "Add your email too and get {days} free on your first membership."
   },
   "account": {
     "title": "My account",
@@ -480,7 +487,46 @@
     "mustChangeLink": "Choose your own password",
     "passwordTitle": "Password",
     "welcomeTitle": "Welcome to GRAMS GYM!",
-    "welcomeBody": "This is your membership number. You'll use it to sign in — keep it safe."
+    "welcomeBody": "This is your membership number. You'll use it to sign in — keep it safe.",
+    "coach": "PT coach",
+    "referrals": "Invite friends",
+    "phoneTaken": "This phone number is already used by another member.",
+    "emailTaken": "This email is already used by another member.",
+    "contactBonusHint": "Add both your email and your phone number and get {days} free on your membership.",
+    "contactBonusEarned": "Saved — you earned {days} free on your membership!",
+    "coachTitle": "Choose your personal-training coach",
+    "coachBody": "Pick the coach you'd like to train with. The front desk sees your choice, and your coach will get in touch to plan your sessions.",
+    "coachCurrent": "Your coach: {name}",
+    "coachChoose": "Choose this coach",
+    "coachChosen": "Your coach",
+    "coachRemove": "Remove my coach choice",
+    "coachNext": "Questions about personal-training sessions and prices? Message us on",
+    "referTitle": "Invite friends, get free days",
+    "referBody": "Give friends your membership number. When a friend signs up with it and starts their first membership, you get {days} free.",
+    "referBodyNoReward": "Give friends your membership number so they can say you invited them when they sign up.",
+    "referShare": "Share on WhatsApp",
+    "referShareText": "Join me at GRAMS GYM! Sign up here and enter my membership number {number} as the friend who invited you: {site}",
+    "referWhoTitle": "Who invited you?",
+    "referWhoBody": "Enter your friend's membership number. You can do this once, within {days} days of creating your account.",
+    "referWhoLabel": "Your friend's membership number",
+    "referWhoSubmit": "Save",
+    "referSaved": "Thanks! Your friend gets their reward once your membership starts.",
+    "referInvitedBy": "You were invited by {name} ({number}).",
+    "referWhoClosed": "You can only add who invited you within {days} days of creating your account.",
+    "referErrors": {
+      "notFound": "We couldn't find that membership number.",
+      "self": "That's your own membership number.",
+      "already": "You've already said who invited you.",
+      "tooLate": "It's too late to add who invited you.",
+      "loop": "You invited this member, so they can't be your inviter.",
+      "rate": "Too many attempts. Please try again later.",
+      "invalid": "Enter a membership number like GG-00042."
+    },
+    "referListTitle": "Friends you invited",
+    "referListSummary": "{count, plural, one {# friend invited} other {# friends invited}} · {rewarded} rewarded",
+    "referListEmpty": "No friends yet. Share your membership number to get started.",
+    "referStatusRewarded": "+{days}",
+    "referStatusPending": "Waiting for their first membership"
   },
   "admin": {
     "title": "Admin",
@@ -803,7 +849,31 @@
     "gender": {
       "male": "Male",
       "female": "Female"
-    }
+    },
+    "teamTitle": "Admins & staff",
+    "teamBody": "Add another admin (full access) or front-desk staff (memberships, check-in, orders). They get a membership number and a temporary password to change on first sign-in. If the phone already belongs to a member, that member gets the role instead.",
+    "teamSubmit": "Add to team",
+    "teamPromoted": "{name} ({number}) now has this role and signs in with their usual password.",
+    "roleAdmin": "Admin",
+    "roleStaff": "Staff",
+    "teamErrors": {
+      "invalid": "Please check the name and phone number.",
+      "self": "That's your own account.",
+      "protected": "Test and guest accounts can't be changed.",
+      "emailExists": "This email is already used by another account.",
+      "phoneTaken": "This phone number is already used by another account."
+    },
+    "coachCol": "PT coach",
+    "filterCoach": "Coach",
+    "anyCoach": "Any coach",
+    "invitedBy": "Invited by",
+    "invitedCount": "{count, plural, one {invited # friend} other {invited # friends}}",
+    "pendingBonus": "{days} bonus waiting",
+    "everyone": "Everyone",
+    "onlyTeam": "Admins & staff",
+    "bonusIncluded": "incl. {days} bonus",
+    "teamConfirm": "This phone number belongs to {name} ({number}). Make this member {role}? They keep their own password.",
+    "teamConfirmYes": "Yes, make them {role}"
   },
   "legal": {
     "draft": "DRAFT — this document must be reviewed by a qualified lawyer in Jordan before going live.",

@@ -3,7 +3,7 @@ import { Download, Search } from "lucide-react";
 import type { SubscriptionStatus } from "@prisma/client";
 import { firstParam, type PageProps } from "@/lib/metadata";
 import { hasRole, requireRole } from "@/lib/auth/guards";
-import { SUBSCRIPTION_STATUSES } from "@/lib/membership";
+import { effectiveEndsAt, SUBSCRIPTION_STATUSES } from "@/lib/membership";
 import { Badge, Card } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/Button";
 import { DaysLeft } from "@/components/admin/DaysLeft";
@@ -127,7 +127,10 @@ export default async function AdminSubscriptionsPage({ params, searchParams }: P
                     <Badge tone={statusTone(s.status, s.active)}>{tb(`status.${s.status}`)}</Badge>
                   </td>
                   <td className="tabular whitespace-nowrap text-muted">{f.dateTime(s.startsAt, { dateStyle: "medium" })}</td>
-                  <td className="tabular whitespace-nowrap text-muted">{(s.endsAt ?? s.renewsAt) ? f.dateTime((s.endsAt ?? s.renewsAt)!, { dateStyle: "medium" }) : "—"}</td>
+                  <td className="tabular whitespace-nowrap text-muted">
+                    {(effectiveEndsAt(s) ?? s.renewsAt) ? f.dateTime((effectiveEndsAt(s) ?? s.renewsAt)!, { dateStyle: "medium" }) : "—"}
+                    {s.bonusDays > 0 ? <span className="block text-xs text-ember">{t("bonusIncluded", { days: tc("days", { count: s.bonusDays }) })}</span> : null}
+                  </td>
                   <td>
                     <DaysLeft remaining={s.remaining} urgency={s.urgency} periodLeft={s.periodLeft} locale={locale} />
                   </td>

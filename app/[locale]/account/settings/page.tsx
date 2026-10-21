@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ProfileForm } from "@/features/account/ProfileForm";
 import { ChangePasswordForm } from "@/features/auth/AuthForms";
 import { requestDataDeletion } from "@/features/account/actions";
+import { env } from "@/lib/env";
 
 export default async function SettingsPage({ params }: PageProps) {
   const { locale } = await params;
@@ -20,7 +21,10 @@ export default async function SettingsPage({ params }: PageProps) {
     <div className="grid gap-6 lg:grid-cols-2">
       <Card className="p-7">
         <h2 className="display mb-6 text-xl">{t("profile")}</h2>
-        <ProfileForm defaults={{ name: user.name ?? "", email: user.email ?? "", phone: user.phone ?? "", locale: user.locale }} />
+        <ProfileForm
+          defaults={{ name: user.name ?? "", email: user.email ?? "", phone: user.phone ?? "", locale: user.locale }}
+          contactBonusDays={user.contactBonusAt || user.isGuest ? 0 : env.CONTACT_BONUS_DAYS}
+        />
       </Card>
       {!user.isTestAccount ? (
         <Card className="h-fit p-7">
