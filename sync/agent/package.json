@@ -1,0 +1,15 @@
+{
+  "name": "grams-gym-sync-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "On-site agent: reads the GramsGym desktop MySQL database (read-only) and pushes changes to the Grams-gym cloud in near-real-time.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node agent.mjs",
+    "ping": "node agent.mjs --ping"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0"
+  }
+}

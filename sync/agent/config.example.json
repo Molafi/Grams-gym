@@ -1,0 +1,42 @@
+{
+  "mysql": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "user": "ggsync",
+    "password": "GgSync_ReadOnly_2026",
+    "database": "gymgdata"
+  },
+  "cloud": {
+    "url": "https://YOUR-GRAMS-GYM-SITE.com/api/sync/legacy",
+    "secret": "PASTE-THE-SAME-VALUE-AS-SYNC_SECRET"
+  },
+  "pollSeconds": 5,
+  "fullSyncMinutes": 10,
+  "batchSize": 500,
+  "statePath": "./agent-state.json",
+  "tables": {
+    "append": ["clocks", "attendance", "payments", "subscriptionsx", "messages_log", "lists"],
+    "full": [
+      "members",
+      "programs",
+      "offers",
+      "subscriptions",
+      "freezes",
+      "staff",
+      "guests",
+      "dayuse",
+      "nationalities",
+      "jobtitles",
+      "contracts",
+      "shifts",
+      "campaigns",
+      "events",
+      "expenses",
+      "expenses_categories",
+      "expenses_items",
+      "transactions",
+      "accounts",
+      "variables"
+    ]
+  }
+}
