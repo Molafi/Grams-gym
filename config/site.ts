@@ -42,14 +42,15 @@ export const site = {
     members: 2000,
   },
   /**
-   * Opening hours — the old site had TWO conflicting versions.
-   * Using the Contact-page version (it had AM/PM) as instructed. TODO(owner): confirm.
-   * Footer version was: Sat–Wed 7:00–11:00, Thu 7:00–9:00, Fri 6:00–9:00.
+   * Opening hours. The owner said "7-11", read as 07:00–23:00 every day. TODO(owner): confirm,
+   * including Thursday and Friday (the old site listed shorter hours for both).
+   * `label` is what the site shows and can be changed in /admin/content → Business info;
+   * `opens`/`closes` feed Google's structured data (lib/seo.ts) and only change here.
    */
   hours: [
-    { key: "satWed", days: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday"], opens: "07:00", closes: "11:00", label: { ar: "7 صباحاً – 11 صباحاً", en: "7 AM – 11 AM" } },
-    { key: "thu", days: ["Thursday"], opens: "19:00", closes: "21:00", label: { ar: "7 مساءً – 9 مساءً", en: "7 PM – 9 PM" } },
-    { key: "fri", days: ["Friday"], opens: "18:00", closes: "21:00", label: { ar: "6 مساءً – 9 مساءً", en: "6 PM – 9 PM" } },
+    { key: "satWed", days: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday"], opens: "07:00", closes: "23:00", label: { ar: "7 صباحاً – 11 مساءً", en: "7 AM – 11 PM" } },
+    { key: "thu", days: ["Thursday"], opens: "07:00", closes: "23:00", label: { ar: "7 صباحاً – 11 مساءً", en: "7 AM – 11 PM" } },
+    { key: "fri", days: ["Friday"], opens: "07:00", closes: "23:00", label: { ar: "7 صباحاً – 11 مساءً", en: "7 AM – 11 PM" } },
   ],
   // Coach photos are image slots in config/media.ts (coachAhmad…), editable in /admin/media.
   coaches: [{ key: "ahmad" }, { key: "amr" }, { key: "simon" }, { key: "zaid" }],

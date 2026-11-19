@@ -90,6 +90,25 @@ enum Gender {
   female
 }
 
+enum TestimonialStatus {
+  pending
+  approved
+  rejected
+}
+
+enum TestimonialSource {
+  member
+  admin
+}
+
+enum BannerPlacement {
+  top_bar
+  home_hero
+  home_inline
+  packages
+  shop
+}
+
 // ─── Users & Auth.js ────────────────────────────────────────────────────────
 
 model User {
@@ -143,6 +162,7 @@ model User {
   checkIns      CheckIn[]      @relation("CheckInMember")
   referredBy    User?          @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals     User[]         @relation("Referrals")
+  testimonial   Testimonial?
 
   @@index([role])
   @@index([createdAt])
@@ -482,4 +502,64 @@ model SiteSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+// ─── Reviews & banners (admin → Reviews / Banners) ──────────────────────────────
+
+/// Reviews from real people. Only `approved` ones are public (features/testimonials/queries.ts).
+/// Limits (1–5 stars, 600 characters) are checked by zod in features/testimonials/schemas.ts.
+model Testimonial {
+  id           String            @id @default(cuid())
+  /// The member who wrote it (one review per member). Null = added by an admin.
+  userId       String?           @unique
+  /// Full name as given. The site shows first name + last initial unless `showFullName`.
+  authorName   String
+  rating       Int
+  body         String
+  /// Language the review is written in.
+  locale       Locale            @default(ar)
+  status       TestimonialStatus @default(pending)
+  source       TestimonialSource @default(member)
+  featured     Boolean           @default(false)
+  showFullName Boolean           @default(false)
+  sortOrder    Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  reviewedAt   DateTime?
+  /// Admin who approved/rejected it (plain id, like CheckIn.staffId; the audit log has the details).
+  reviewedById String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([featured])
+  @@index([sortOrder])
+}
+
+/// Ads & banners. Shown while `active` and inside [startsAt, endsAt) — see lib/banners.ts.
+model Banner {
+  id              String          @id @default(cuid())
+  placement       BannerPlacement
+  titleAr         String
+  titleEn         String
+  bodyAr          String?
+  bodyEn          String?
+  ctaLabelAr      String?
+  ctaLabelEn      String?
+  /// A path on this site ("/packages") or an https:// address.
+  linkUrl         String?
+  /// Same-origin images only (the CSP allows img-src 'self'): an upload under /media/… or a file under /images/….
+  imageDesktopUrl String?
+  imageMobileUrl  String?
+  /// Null = no limit on that side.
+  startsAt        DateTime?
+  endsAt          DateTime?
+  active          Boolean         @default(false)
+  dismissible     Boolean         @default(true)
+  sortOrder       Int             @default(0)
+  clicks          Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([placement, active])
 }
