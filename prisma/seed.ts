@@ -2,6 +2,10 @@
  * Seed: plans, test accounts, 12 DEMO products, and demo members with
  * memberships ending at different times (so the admin "days left" view has data).
  * Safe to re-run (upserts). Run: npm run db:seed
+ *
+ * On purpose NOT seeded: business info (opening hours, phone, address — the defaults are in
+ * config/site.ts; a SiteSetting row would override admin edits), reviews (only real ones) and
+ * banners. Never run this against production: it creates the demo products and members.
  */
 import { PrismaClient, type ProductCategory, type ProductShape } from "@prisma/client";
 import { PLAN_SEEDS } from "../config/plans";

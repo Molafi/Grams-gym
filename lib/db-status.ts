@@ -100,6 +100,25 @@ export async function optionalRead<T>(where: string, load: () => Promise<T>): Pr
   }
 }
 
+let lastMissingWarning = 0;
+
+/**
+ * For `promise.catch(...)` on tables added after launch (reviews, banners). If the table or a
+ * column doesn't exist yet (the schema change in prisma/changes/ wasn't applied), read it as
+ * `fallback`. `optionalRead` would treat that as "database not set up" and switch every
+ * optional read off for 15 s, hiding the site's text edits, images and business info.
+ */
+export const fallbackIfTableMissing =
+  <T>(where: string, fallback: T) =>
+  (e: unknown): T => {
+    if (!(e instanceof Prisma.PrismaClientKnownRequestError) || (e.code !== "P2021" && e.code !== "P2022")) throw e;
+    if (Date.now() - lastMissingWarning > 60_000) {
+      lastMissingWarning = Date.now();
+      console.warn(`[db] ${where}: table missing, showing nothing. Apply the SQL in prisma/changes/ (see the file's header).`);
+    }
+    return fallback;
+  };
+
 /** Logs a failed optional read: one short warning if the DB is down, the full error otherwise. */
 export function logOptionalReadFailure(where: string, e: unknown) {
   if (isDbUnavailable(e)) markDbDown(where);

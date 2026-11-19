@@ -16,9 +16,10 @@ this use case. Sources: [Activate your store](https://docs.lemonsqueezy.com/help
   - Front-desk memberships work today without any gateway (`/admin/subscriptions` → Add / extend).
 
 ## Business facts to confirm (`config/site.ts`)
-- [ ] **Opening hours — the old site had two versions.** Footer: Sat–Wed 7:00–11:00, Thu 7:00–9:00, Fri 6:00–9:00
-      (no AM/PM). Contact page: Sat–Wed 7 AM–11 AM, Thu 7 PM–9 PM, Fri 6 PM–9 PM. As instructed, the site uses the
-      **Contact-page version**. Note "7 AM – 11 AM" for Sat–Wed looks like it may be meant as 11 PM — please confirm.
+- [ ] **Opening hours.** The owner said "7-11"; the site now shows **7 AM – 11 PM every day** (07:00–23:00).
+      Please confirm, especially Thursday and Friday: the old site listed shorter hours for both (Thu 7–9, Fri 6–9).
+      The text can be changed in `/admin/content` → Business info; the times in Google's structured data are in
+      `config/site.ts`.
 - [ ] **Street address** (Arabic + English). The original text was not in the files received; currently "Amman, Jordan".
 - [ ] **WhatsApp prefilled consultation message.** Original text not received; a placeholder is used.
 - [ ] Company legal name / registration number for the legal pages.
