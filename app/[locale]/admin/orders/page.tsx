@@ -5,7 +5,7 @@ import { firstParam, type PageProps } from "@/lib/metadata";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { Badge, Card } from "@/components/ui/primitives";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClass } from "@/components/ui/Button";
 import { updateOrderStatus } from "@/features/admin/actions";
 import { CLOSED_STATUSES, isClosed } from "@/lib/orders";
 import { requireRole } from "@/lib/auth/guards";
@@ -37,7 +37,7 @@ export default async function AdminOrdersPage({ params, searchParams }: PageProp
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl">{t("nav.orders")}</h1>
-        <a href="/api/admin/export?type=orders" download className="inline-flex h-10 items-center gap-2 rounded-full border border-hairline-strong px-4 text-sm">
+        <a href="/api/admin/export?type=orders" download className={buttonClass("primary", "sm")}>
           <Download className="h-4 w-4" aria-hidden /> {t("exportCsv")}
         </a>
       </div>
@@ -53,7 +53,7 @@ export default async function AdminOrdersPage({ params, searchParams }: PageProp
             ))}
           </select>
         </label>
-        <Button type="submit" variant="glass">
+        <Button type="submit">
           {tc("filter")}
         </Button>
       </form>

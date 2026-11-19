@@ -91,7 +91,7 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="kind" value="admin" />
                     <input type="hidden" name="callbackUrl" value={callbackUrl} />
-                    <Button type="submit" variant="glass" wrap className="w-full" data-testid="test-admin-login">
+                    <Button type="submit" wrap className="w-full" data-testid="test-admin-login">
                       <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden /> {t("testAdmin")}
                     </Button>
                   </form>
@@ -99,7 +99,7 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
                 {testAdminEnabled && guestAdminEnabled ? (
                   <form action={signInAsGuestAdmin} className="min-w-0">
                     <input type="hidden" name="locale" value={locale} />
-                    <Button type="submit" variant="glass" wrap className="w-full" data-testid="guest-admin-login">
+                    <Button type="submit" wrap className="w-full" data-testid="guest-admin-login">
                       <Eye className="h-4 w-4 shrink-0" aria-hidden /> {t("testGuest")}
                     </Button>
                   </form>

@@ -84,7 +84,7 @@ export default async function AboutPage({ params }: PageProps) {
                 <p className="mt-3 text-muted">{t(k)}</p>
               </Reveal>
             ))}
-            <ButtonLink href="/services" variant="glass">
+            <ButtonLink href="/services">
               {t("allServices")}
             </ButtonLink>
           </div>

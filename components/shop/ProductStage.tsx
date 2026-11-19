@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Maximize2, X } from "lucide-react";
 import { SceneSlot } from "@/components/3d/SceneSlot";
 import type { PackProps } from "@/components/3d/models";
+import { buttonClass } from "@/components/ui/Button";
 import { PackArt } from "./PackArt";
 
 const ProductViewer = dynamic(() => import("@/components/3d/ProductViewer"), { ssr: false });
@@ -38,13 +39,12 @@ export function ProductStage({ pack, name }: { pack: PackProps; name: string }) 
             className="h-full w-full"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="glass absolute bottom-4 end-4 z-10 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm"
-        >
-          <Maximize2 className="h-4 w-4" aria-hidden /> {t("viewIn3d")}
-        </button>
+        {/* Wrapper holds the position: buttonClass() sets `relative`, which would cancel `absolute`. */}
+        <div className="absolute bottom-4 end-4 z-10">
+          <button type="button" onClick={() => setOpen(true)} className={buttonClass("primary", "sm")}>
+            <Maximize2 className="h-4 w-4" aria-hidden /> {t("viewIn3d")}
+          </button>
+        </div>
       </div>
 
       {open ? (

@@ -170,7 +170,6 @@ export function ProductForm({ initial, version }: { initial: ProductFormData; ve
           ))}
           <Button
             type="button"
-            variant="glass"
             size="sm"
             onClick={() => setData((d) => ({ ...d, variants: [...d.variants, { sku: "", flavorAr: "", flavorEn: "", sizeLabel: "", price: "", compareAt: "", stock: 0, active: true }] }))}
           >

@@ -13,7 +13,7 @@ import {
   Vector2,
 } from "three";
 import { ggLetters } from "@/lib/gg-geometry";
-import { BlackSteel, BrushedSilver, Chrome } from "./materials";
+import { BlackSteel, Chrome, GlossWhite } from "./materials";
 import { drawLabel, type LabelData } from "./label";
 
 /* ─── GG monogram ───────────────────────────────────────────────────────── */
@@ -42,7 +42,7 @@ export function GGMonogram() {
 
   return (
     <mesh geometry={geometry} castShadow>
-      <BrushedSilver />
+      <GlossWhite />
     </mesh>
   );
 }

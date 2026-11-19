@@ -104,7 +104,7 @@ export default async function ShopPage({ params, searchParams }: PageProps) {
               <input type="checkbox" name="stock" value="1" defaultChecked={inStock} className="h-4 w-4 accent-[#ff7d09]" />
               {t("inStockOnly")}
             </label>
-            <Button type="submit" variant="glass">
+            <Button type="submit">
               {tc("filter")}
             </Button>
           </form>

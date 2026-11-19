@@ -8,6 +8,7 @@ import { formatMemberNumber } from "@/lib/member-number";
 import { canStillBeReferred, REFERRAL_WINDOW_DAYS } from "@/lib/referral";
 import { site } from "@/config/site";
 import { Badge, Card } from "@/components/ui/primitives";
+import { buttonClass } from "@/components/ui/Button";
 import { ReferralForm } from "@/features/account/ReferralForm";
 
 /** Only the first name of an invited friend is shown to the inviter. */
@@ -54,7 +55,7 @@ export default async function ReferralsPage({ params }: PageProps) {
           href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-flex h-11 items-center gap-2 rounded-full border border-hairline-strong px-5 text-sm hover:text-ember"
+          className={buttonClass("primary", "md", "mt-6")}
         >
           <Share2 className="h-4 w-4" aria-hidden /> {t("referShare")}
         </a>

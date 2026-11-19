@@ -28,7 +28,7 @@ export async function Hero({ locale }: { locale: string }) {
             {t("ctaPrimary")}
           </ButtonLink>
         </Magnetic>
-        <ExternalButton href={whatsappHref(locale, biz)} variant="glass" size="lg">
+        <ExternalButton href={whatsappHref(locale, biz)} size="lg">
           {t("ctaSecondary")}
         </ExternalButton>
       </div>

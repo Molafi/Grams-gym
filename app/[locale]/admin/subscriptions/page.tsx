@@ -5,7 +5,7 @@ import { firstParam, type PageProps } from "@/lib/metadata";
 import { hasRole, requireRole } from "@/lib/auth/guards";
 import { effectiveEndsAt, SUBSCRIPTION_STATUSES } from "@/lib/membership";
 import { Badge, Card } from "@/components/ui/primitives";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClass } from "@/components/ui/Button";
 import { DaysLeft } from "@/components/admin/DaysLeft";
 import { statusTone } from "@/features/billing/MembershipSummary";
 import { getActivePlans } from "@/features/billing/membership";
@@ -43,7 +43,7 @@ export default async function AdminSubscriptionsPage({ params, searchParams }: P
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl">{t("nav.subscriptions")}</h1>
-        <a href={`/api/admin/export?${exportQuery}`} download className="inline-flex h-10 items-center gap-2 rounded-full border border-hairline-strong px-4 text-sm">
+        <a href={`/api/admin/export?${exportQuery}`} download className={buttonClass("primary", "sm")}>
           <Download className="h-4 w-4" aria-hidden /> {t("exportCsv")}
         </a>
       </div>
@@ -83,7 +83,7 @@ export default async function AdminSubscriptionsPage({ params, searchParams }: P
             ))}
           </select>
         </label>
-        <Button type="submit" variant="glass">
+        <Button type="submit">
           {tc("filter")}
         </Button>
       </form>
@@ -142,7 +142,7 @@ export default async function AdminSubscriptionsPage({ params, searchParams }: P
                             <input type="hidden" name="id" value={s.id} />
                             <input type="hidden" name="months" value={m} />
                             <input type="hidden" name="locale" value={locale} />
-                            <button type="submit" className="rounded-full border border-hairline-strong px-3 py-1 text-xs hover:border-ember hover:text-ember">
+                            <button type="submit" className={buttonClass("primary", "xs")}>
                               {t("extendBy", { months: m })}
                             </button>
                           </form>

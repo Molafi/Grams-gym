@@ -168,11 +168,11 @@ export function Navbar({ user, products, logoSrc }: { user: NavUser; products: P
                   </motion.li>
                 ))}
                 <li className="mt-4 flex gap-3">
-                  <button type="button" onClick={() => setPaletteOpen(true)} className={buttonClass("glass", "md")}>
+                  <button type="button" onClick={() => setPaletteOpen(true)} className={buttonClass("primary", "md")}>
                     <Search className="h-4 w-4" aria-hidden /> {t("search")}
                   </button>
                   {user ? null : (
-                    <Link href="/signin" className={buttonClass("glass", "md")}>
+                    <Link href="/signin" className={buttonClass("primary", "md")}>
                       {t("signIn")}
                     </Link>
                   )}

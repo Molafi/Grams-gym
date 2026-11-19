@@ -1,8 +1,13 @@
 import type { ComponentProps, ReactNode } from "react";
 import { Link } from "@/lib/i18n/navigation";
 
-type Variant = "primary" | "glass" | "ghost" | "danger";
-type Size = "sm" | "md" | "lg";
+/**
+ * Every action button is the brand orange (`primary`, the ember token). The only exceptions:
+ * `danger` (red outline) for destructive actions and `ghost` (plain text) for cancel/clear links.
+ * Dark text on ember is 7.7:1 (9.4:1 on hover), above WCAG AA/AAA for normal text.
+ */
+type Variant = "primary" | "ghost" | "danger";
+type Size = "xs" | "sm" | "md" | "lg";
 
 const base =
   "group relative inline-flex select-none items-center justify-center gap-2 rounded-full font-medium transition-[transform,background-color,border-color,box-shadow,color] duration-500 ease-[cubic-bezier(.22,1,.36,1)] disabled:pointer-events-none disabled:opacity-45 active:scale-[.98] whitespace-nowrap";
@@ -10,12 +15,12 @@ const base =
 const variants: Record<Variant, string> = {
   primary:
     "bg-ember text-[#130800] shadow-[inset_0_1px_0_rgb(255_255_255/.35),0_10px_30px_-12px_var(--color-ember-glow)] hover:bg-ember-soft hover:shadow-[inset_0_1px_0_rgb(255_255_255/.4),0_16px_40px_-12px_var(--color-ember-glow)]",
-  glass: "glass text-ink hover:border-hairline-strong hover:bg-white/[.06]",
   ghost: "text-muted hover:text-ink",
   danger: "border border-danger/40 text-danger hover:bg-danger/10",
 };
 
 const sizes: Record<Size, string> = {
+  xs: "h-7 px-3 text-xs",
   sm: "h-9 px-4 text-sm",
   md: "h-11 px-6 text-[0.95rem]",
   lg: "h-14 px-8 text-base",
@@ -23,6 +28,7 @@ const sizes: Record<Size, string> = {
 
 /** Same sizes for buttons whose label may wrap onto a second line (long labels in narrow boxes). */
 const wrapSizes: Record<Size, string> = {
+  xs: "min-h-7 px-3 py-1 text-xs",
   sm: "min-h-9 px-4 py-1.5 text-sm",
   md: "min-h-11 px-5 py-2.5 text-[0.95rem]",
   lg: "min-h-14 px-6 py-3 text-base",

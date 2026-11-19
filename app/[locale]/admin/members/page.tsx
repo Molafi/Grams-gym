@@ -8,7 +8,7 @@ import { urgency } from "@/lib/membership";
 import { isMembershipActive, remainingFor } from "@/features/billing/membership";
 import { INTERVAL_MONTHS } from "@/config/plans";
 import { Badge, Card } from "@/components/ui/primitives";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClass } from "@/components/ui/Button";
 import { DaysLeft } from "@/components/admin/DaysLeft";
 import { changeRole } from "@/features/admin/actions";
 import { ResetPasswordButton } from "@/features/admin/ResetPasswordButton";
@@ -72,7 +72,7 @@ export default async function AdminMembersPage({ params, searchParams }: PagePro
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="display text-4xl">{t("nav.members")}</h1>
-        <a href="/api/admin/export?type=members" download className="inline-flex h-10 items-center gap-2 rounded-full border border-hairline-strong px-4 text-sm">
+        <a href="/api/admin/export?type=members" download className={buttonClass("primary", "sm")}>
           <Download className="h-4 w-4" aria-hidden /> {t("exportCsv")}
         </a>
       </div>
@@ -105,7 +105,7 @@ export default async function AdminMembersPage({ params, searchParams }: PagePro
             ))}
           </select>
         </label>
-        <Button type="submit" variant="glass">
+        <Button type="submit">
           {tc("search")}
         </Button>
       </form>

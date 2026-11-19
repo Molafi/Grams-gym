@@ -22,7 +22,7 @@ type Interval = "monthly" | "quarterly" | "yearly";
 const INTERVALS: Interval[] = ["monthly", "quarterly", "yearly"];
 const TIER_MARK: Record<string, string> = { starter: "I", pro: "II", elite: "III" };
 
-export function JoinButton({ plan, interval, label, primary }: { plan: string; interval: Interval; label: string; primary: boolean }) {
+export function JoinButton({ plan, interval, label }: { plan: string; interval: Interval; label: string }) {
   const locale = useLocale();
   const t = useTranslations("packages");
   const tc = useTranslations("common");
@@ -32,7 +32,7 @@ export function JoinButton({ plan, interval, label, primary }: { plan: string; i
       <input type="hidden" name="plan" value={plan} />
       <input type="hidden" name="interval" value={interval} />
       <input type="hidden" name="locale" value={locale} />
-      <button type="submit" disabled={pending} className={buttonClass(primary ? "primary" : "glass", "lg", "w-full")}>
+      <button type="submit" disabled={pending} className={buttonClass("primary", "lg", "w-full")}>
         {pending ? tc("loading") : label}
       </button>
       <p aria-live="polite" className="mt-3 min-h-5 text-center text-xs text-danger">
@@ -129,7 +129,7 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
                 <span className="text-sm text-muted">{t(`per.${interval}`)}</span>
               </div>
               <div className="mt-6 flex flex-col gap-2">
-                <JoinButton plan={plan.slug} interval={interval} label={t("join", { plan: plan.name })} primary={plan.recommended} />
+                <JoinButton plan={plan.slug} interval={interval} label={t("join", { plan: plan.name })} />
                 <button type="button" onClick={() => setFlipped(true)} className="text-sm text-muted underline-offset-4 hover:text-ink hover:underline">
                   {t("flip")}
                 </button>
@@ -152,7 +152,7 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
               ))}
             </ul>
             <div className="mt-auto flex flex-col gap-2 pt-8">
-              <JoinButton plan={plan.slug} interval={interval} label={t("join", { plan: plan.name })} primary={plan.recommended} />
+              <JoinButton plan={plan.slug} interval={interval} label={t("join", { plan: plan.name })} />
               <button
                 type="button"
                 onClick={() => setFlipped(false)}
@@ -174,7 +174,7 @@ export function PlanCards({ plans, currentPlanSlug, initialInterval = "monthly" 
 
   return (
     <div>
-      <div role="radiogroup" aria-label={t("eyebrow")} className="glass mx-auto mb-12 flex w-fit rounded-full p-1">
+      <div role="radiogroup" aria-label={t("eyebrow")} className="glass mx-auto mb-8 flex w-fit rounded-full p-1">
         {INTERVALS.map((i) => (
           <button
             key={i}
@@ -191,7 +191,7 @@ export function PlanCards({ plans, currentPlanSlug, initialInterval = "monthly" 
           </button>
         ))}
       </div>
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         {plans.map((p) => (
           <PlanCard key={p.slug} plan={p} interval={interval} current={p.slug === currentPlanSlug} />
         ))}
