@@ -76,7 +76,7 @@ jobs:
             ["product", "/shop/demo-forge-whey"],
           ];
           for (const [device, opts] of Object.entries(viewports)) {
-            for (const motion of ["normal", "reduce"]) {
+            for (const motion of ["no-preference", "reduce"]) {
               const context = await browser.newContext({ ...opts, reducedMotion: motion });
               const page = await context.newPage();
               for (const locale of ["ar", "en"]) {
@@ -87,7 +87,7 @@ jobs:
                   await page.waitForTimeout(6000); // idle callback + 3D fade-in
                   const tag = motion === "reduce" ? "-poster" : "";
                   await page.screenshot({ path: `${out}/${name}${tag}-${locale}-${device}-top.png` });
-                  if (motion === "normal") await page.screenshot({ path: `${out}/${name}-${locale}-${device}-full.png`, fullPage: true });
+                  if (motion === "no-preference") await page.screenshot({ path: `${out}/${name}-${locale}-${device}-full.png`, fullPage: true });
                   console.log("saved", name, locale, device, motion);
                 }
               }
