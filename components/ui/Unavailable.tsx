@@ -19,7 +19,7 @@ export async function Unavailable({ locale }: { locale: string }) {
             dev: {dbHint()}
           </p>
         ) : null}
-        <ExternalButton href={whatsappHref(locale, biz)} variant="glass" className="mt-8">
+        <ExternalButton href={whatsappHref(locale, biz)} className="mt-8">
           {t("unavailableContact")}
         </ExternalButton>
       </div>

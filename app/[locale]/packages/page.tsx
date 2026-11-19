@@ -24,7 +24,7 @@ export default async function PackagesPage({ params, searchParams }: PageProps) 
   const data = await readOrNull("memberships page", () => Promise.all([getActivePlans(), getAddons(), getSessionUser()]));
   if (!data) {
     return (
-      <section className="atmosphere pb-10 pt-40">
+      <section className="atmosphere pb-8 pt-40">
         <Container>
           <SectionHeading as="h1" eyebrow={t("eyebrow")} title={t("title")} subtitle={t("subtitle")} className="mx-auto text-center [&_.eyebrow]:justify-center [&_p]:mx-auto" />
         </Container>
@@ -43,7 +43,7 @@ export default async function PackagesPage({ params, searchParams }: PageProps) 
 
   return (
     <>
-      <section className="atmosphere pb-10 pt-40">
+      <section className="atmosphere pb-8 pt-40">
         <Container>
           <SectionHeading as="h1" eyebrow={t("eyebrow")} title={t("title")} subtitle={t("subtitle")} className="mx-auto text-center [&_.eyebrow]:justify-center [&_p]:mx-auto" />
         </Container>
@@ -57,16 +57,16 @@ export default async function PackagesPage({ params, searchParams }: PageProps) 
               <p className="text-sm text-muted">{t(`interval.${joinInterval}`)}</p>
             </div>
             <div className="w-full sm:w-64">
-              <JoinButton plan={resumePlan.slug} interval={joinInterval} label={t("join", { plan: locale === "en" ? resumePlan.nameEn : resumePlan.nameAr })} primary />
+              <JoinButton plan={resumePlan.slug} interval={joinInterval} label={t("join", { plan: locale === "en" ? resumePlan.nameEn : resumePlan.nameAr })} />
             </div>
           </div>
         </Container>
       ) : null}
 
-      <section className="pb-24">
+      <section className="pb-16">
         <Container>
           <PlanCards plans={plans.map((p) => toPlanCard(p, locale))} currentPlanSlug={currentSlug} initialInterval={joinInterval} />
-          <p className="mt-10 text-center text-sm text-muted">{t("payAtDesk")}</p>
+          <p className="mt-8 text-center text-sm text-muted">{t("payAtDesk")}</p>
           {plans.some((p) => p.isPlaceholder) ? (
             <p className="mt-3 text-center">
               <Badge tone="warning">{t("placeholderNote")}</Badge>
@@ -76,10 +76,10 @@ export default async function PackagesPage({ params, searchParams }: PageProps) 
       </section>
 
       {addons.length > 0 ? (
-        <section className="pb-24">
+        <section className="pb-16">
           <Container>
-            <h2 className="display mb-8 text-3xl">{t("addonsTitle")}</h2>
-            <ul className="grid gap-5 md:grid-cols-2">
+            <h2 className="display mb-6 text-3xl">{t("addonsTitle")}</h2>
+            <ul className="grid gap-4 md:grid-cols-2">
               {addons.map((a) => (
                 <li key={a.id} className="card flex items-center justify-between gap-6 p-7">
                   <div>

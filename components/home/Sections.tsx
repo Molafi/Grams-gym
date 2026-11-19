@@ -31,9 +31,9 @@ export async function PackagesPreview({ locale }: { locale: string }) {
   const plans = await orEmpty("plans", getActivePlans);
   if (plans.length === 0) return null;
   return (
-    <section className="py-32" aria-labelledby="packages-title">
+    <section className="py-20 sm:py-24" aria-labelledby="packages-title">
       <Container>
-        <SectionHeading eyebrow={t("eyebrow")} title={<span id="packages-title">{t("title")}</span>} subtitle={t("subtitle")} className="mx-auto mb-16 text-center [&_p]:mx-auto [&_.eyebrow]:justify-center" />
+        <SectionHeading eyebrow={t("eyebrow")} title={<span id="packages-title">{t("title")}</span>} subtitle={t("subtitle")} className="mx-auto mb-10 text-center [&_p]:mx-auto [&_.eyebrow]:justify-center" />
         <PlanCards plans={plans.map((p) => toPlanCard(p, locale))} />
       </Container>
     </section>
@@ -50,7 +50,7 @@ export async function ShopHighlights({ locale }: { locale: string }) {
       <Container>
         <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
           <SectionHeading eyebrow={t("eyebrow")} title={<span id="shop-title">{t("title")}</span>} subtitle={t("subtitle")} />
-          <ButtonLink href="/shop" variant="glass">
+          <ButtonLink href="/shop">
             {tc("viewAll")} <ArrowUpRight className="flip-rtl h-4 w-4" aria-hidden />
           </ButtonLink>
         </div>

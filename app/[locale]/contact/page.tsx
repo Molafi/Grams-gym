@@ -31,7 +31,7 @@ export default async function ContactPage({ params }: PageProps) {
             <a href={`tel:${biz.phone.e164}`} className="display tabular mt-2 block text-3xl" dir="ltr">
               {biz.phone.display}
             </a>
-            <ExternalButton href={whatsappHref(locale, biz)} className="mt-8" variant="glass">
+            <ExternalButton href={whatsappHref(locale, biz)} className="mt-8">
               <MessageCircle className="h-4 w-4" aria-hidden /> {t("whatsapp")}
             </ExternalButton>
           </Reveal>
@@ -40,7 +40,7 @@ export default async function ContactPage({ params }: PageProps) {
             <MapPin className="h-5 w-5 text-ember" aria-hidden />
             <h2 className="mt-5 text-sm text-muted">{t("address")}</h2>
             <address className="mt-2 text-xl not-italic">{locale === "en" ? biz.address.en : biz.address.ar}</address>
-            <ExternalButton href={site.maps.url} className="mt-8" variant="glass">
+            <ExternalButton href={site.maps.url} className="mt-8">
               {t("directions")}
             </ExternalButton>
             <div className="mt-8 border-t border-hairline pt-6">

@@ -85,7 +85,6 @@ export function CheckInScanner() {
         </form>
         <Button
           type="button"
-          variant="glass"
           onClick={() => {
             if (!scanning && !detectorCtor()) {
               setUnsupported(true);

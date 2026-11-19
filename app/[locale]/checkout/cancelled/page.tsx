@@ -17,7 +17,7 @@ export default async function CheckoutCancelledPage({ params }: PageProps) {
           <XCircle className="mx-auto h-12 w-12 text-muted" aria-hidden />
           <h1 className="display mt-6 text-4xl">{t("cancelledTitle")}</h1>
           <p className="mt-4 text-muted">{t("cancelledBody")}</p>
-          <ButtonLink href="/cart" className="mt-8" variant="glass">
+          <ButtonLink href="/cart" className="mt-8">
             {t("backToCart")}
           </ButtonLink>
         </div>

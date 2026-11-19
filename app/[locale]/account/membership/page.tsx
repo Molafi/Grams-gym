@@ -4,7 +4,7 @@ import { AlertTriangle, CreditCard, ExternalLink, Gift } from "lucide-react";
 import { firstParam, type PageProps } from "@/lib/metadata";
 import { requireUser } from "@/lib/auth/guards";
 import { Card } from "@/components/ui/primitives";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink, buttonClass } from "@/components/ui/Button";
 import { describe, getCurrentSubscription } from "@/features/billing/membership";
 import { MembershipSummary } from "@/features/billing/MembershipSummary";
 import { CheckoutConfirming } from "@/features/billing/CheckoutConfirming";
@@ -85,12 +85,12 @@ export default async function MembershipPage({ params, searchParams }: PageProps
 
         <div className="mt-8 flex flex-wrap gap-3 border-t border-hairline pt-6">
           {isLs && sub.customerPortalUrl ? (
-            <a href={sub.customerPortalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-full border border-hairline-strong px-5 text-sm">
+            <a href={sub.customerPortalUrl} target="_blank" rel="noopener noreferrer" className={buttonClass("primary", "md")}>
               {t("manage")} <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             </a>
           ) : null}
           {isLs && sub.updatePaymentMethodUrl ? (
-            <a href={sub.updatePaymentMethodUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-full border border-hairline-strong px-5 text-sm">
+            <a href={sub.updatePaymentMethodUrl} target="_blank" rel="noopener noreferrer" className={buttonClass("primary", "md")}>
               {t("updateCard")} <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             </a>
           ) : null}

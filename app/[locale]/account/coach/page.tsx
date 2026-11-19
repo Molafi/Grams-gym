@@ -69,7 +69,7 @@ export default async function CoachPage({ params }: PageProps) {
                     <form action={chooseCoach}>
                       <input type="hidden" name="locale" value={locale} />
                       <input type="hidden" name="coach" value={key} />
-                      <Button type="submit" size="sm" variant={current ? "glass" : "primary"} wrap className="w-full">
+                      <Button type="submit" size="sm" wrap className="w-full">
                         {t("coachChoose")}
                       </Button>
                     </form>

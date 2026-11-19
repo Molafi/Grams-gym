@@ -132,7 +132,7 @@ export function ImportTool({ plans }: { plans: { slug: string; name: string }[] 
               ))}
             </select>
           </label>
-          <Button type="button" variant="glass" onClick={() => void send("preview")} disabled={busy !== null}>
+          <Button type="button" onClick={() => void send("preview")} disabled={busy !== null}>
             <Eye className="h-4 w-4" aria-hidden /> {busy === "preview" ? "…" : t("preview")}
           </Button>
         </div>

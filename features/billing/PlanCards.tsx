@@ -22,7 +22,7 @@ type Interval = "monthly" | "quarterly" | "yearly";
 const INTERVALS: Interval[] = ["monthly", "quarterly", "yearly"];
 const TIER_MARK: Record<string, string> = { starter: "I", pro: "II", elite: "III" };
 
-export function JoinButton({ plan, interval, label, primary }: { plan: string; interval: Interval; label: string; primary: boolean }) {
+export function JoinButton({ plan, interval, label }: { plan: string; interval: Interval; label: string }) {
   const locale = useLocale();
   const t = useTranslations("packages");
   const tc = useTranslations("common");
@@ -32,7 +32,7 @@ export function JoinButton({ plan, interval, label, primary }: { plan: string; i
       <input type="hidden" name="plan" value={plan} />
       <input type="hidden" name="interval" value={interval} />
       <input type="hidden" name="locale" value={locale} />
-      <button type="submit" disabled={pending} className={buttonClass(primary ? "primary" : "glass", "lg", "w-full")}>
+      <button type="submit" disabled={pending} className={buttonClass("primary", "lg", "w-full")}>
         {pending ? tc("loading") : label}
       </button>
       <p aria-live="polite" className="mt-3 min-h-5 text-center text-xs text-danger">
@@ -58,7 +58,7 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
   const price = formatMoney(plan.prices[interval], plan.currency, locale);
 
   return (
-    <div className="[perspective:1400px]">
+    <div className="h-full [perspective:1400px]">
       <motion.div
         ref={ref}
         onPointerMove={(e) => {
@@ -72,17 +72,23 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
           py.set(0);
         }}
         style={{ rotateX: reduce ? 0 : rx, rotateY: reduce ? 0 : ry, transformStyle: "preserve-3d" }}
-        className="relative"
+        className="relative h-full"
       >
+        {/*
+          Both faces share one grid cell, so the card is as tall as its taller face and the three
+          cards in a row match. (They used to be `absolute`, but `.card` in globals.css sets
+          `position: relative` outside Tailwind's layers and wins, so the hidden back face sat
+          under the front and left a large empty gap below every card.)
+        */}
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
           transition={{ duration: reduce ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
           style={{ transformStyle: "preserve-3d" }}
-          className="relative min-h-[520px]"
+          className="relative grid h-full"
         >
           {/* FRONT */}
           <div
-            className={`card absolute inset-0 flex flex-col overflow-hidden p-8 [backface-visibility:hidden] ${
+            className={`card col-start-1 row-start-1 flex flex-col overflow-hidden p-8 [backface-visibility:hidden] ${
               plan.recommended ? "border-ember/50 shadow-[0_0_0_1px_rgba(255,125,9,.35),0_30px_80px_-30px_rgba(255,125,9,.45)]" : ""
             }`}
             style={{
@@ -129,7 +135,7 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
                 <span className="text-sm text-muted">{t(`per.${interval}`)}</span>
               </div>
               <div className="mt-6 flex flex-col gap-2">
-                <JoinButton plan={plan.slug} interval={interval} label={t("join", { plan: plan.name })} primary={plan.recommended} />
+                <JoinButton plan={plan.slug} interval={interval} label={t("join", { plan: plan.name })} />
                 <button type="button" onClick={() => setFlipped(true)} className="text-sm text-muted underline-offset-4 hover:text-ink hover:underline">
                   {t("flip")}
                 </button>
@@ -139,7 +145,7 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
 
           {/* BACK */}
           <div
-            className="card absolute inset-0 flex flex-col p-8 [backface-visibility:hidden] [transform:rotateY(180deg)]"
+            className="card col-start-1 row-start-1 flex flex-col p-8 [backface-visibility:hidden] [transform:rotateY(180deg)]"
             inert={!flipped}
           >
             <h3 className="display text-2xl">{plan.name}</h3>
@@ -152,7 +158,7 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
               ))}
             </ul>
             <div className="mt-auto flex flex-col gap-2 pt-8">
-              <JoinButton plan={plan.slug} interval={interval} label={t("join", { plan: plan.name })} primary={plan.recommended} />
+              <JoinButton plan={plan.slug} interval={interval} label={t("join", { plan: plan.name })} />
               <button
                 type="button"
                 onClick={() => setFlipped(false)}
@@ -174,7 +180,7 @@ export function PlanCards({ plans, currentPlanSlug, initialInterval = "monthly" 
 
   return (
     <div>
-      <div role="radiogroup" aria-label={t("eyebrow")} className="glass mx-auto mb-12 flex w-fit rounded-full p-1">
+      <div role="radiogroup" aria-label={t("eyebrow")} className="glass mx-auto mb-8 flex w-fit rounded-full p-1">
         {INTERVALS.map((i) => (
           <button
             key={i}
@@ -191,7 +197,7 @@ export function PlanCards({ plans, currentPlanSlug, initialInterval = "monthly" 
           </button>
         ))}
       </div>
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         {plans.map((p) => (
           <PlanCard key={p.slug} plan={p} interval={interval} current={p.slug === currentPlanSlug} />
         ))}

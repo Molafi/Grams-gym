@@ -119,7 +119,7 @@ export default async function AdminContentPage({ params, searchParams }: PagePro
           <Search className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input name="q" defaultValue={q} placeholder={t("search")} className="field ps-11" />
         </label>
-        <Button type="submit" variant="glass">
+        <Button type="submit">
           {t("searchButton")}
         </Button>
       </form>

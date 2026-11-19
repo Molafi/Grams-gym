@@ -18,6 +18,26 @@ export function BrushedSilver({ color = "#cfd3d9" }: { color?: string }) {
   );
 }
 
+/**
+ * Bright white for the hero GG monogram. Not metal: metal mirrors the dark studio and reads grey.
+ * Not tone-mapped: ACES would cap lit faces at ~90% grey instead of pure white.
+ */
+export function GlossWhite() {
+  return (
+    <meshPhysicalMaterial
+      color="#ffffff"
+      metalness={0}
+      roughness={0.35}
+      clearcoat={1}
+      clearcoatRoughness={0.15}
+      emissive="#ffffff"
+      emissiveIntensity={0.85}
+      envMapIntensity={1}
+      toneMapped={false}
+    />
+  );
+}
+
 export function Chrome() {
   return <meshPhysicalMaterial color="#e8eaed" metalness={1} roughness={0.12} clearcoat={1} clearcoatRoughness={0.08} envMapIntensity={1.3} />;
 }
