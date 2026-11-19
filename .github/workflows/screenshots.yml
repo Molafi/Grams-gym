@@ -88,6 +88,12 @@ jobs:
                   const tag = motion === "reduce" ? "-poster" : "";
                   await page.screenshot({ path: `${out}/${name}${tag}-${locale}-${device}-top.png` });
                   if (motion === "no-preference") await page.screenshot({ path: `${out}/${name}-${locale}-${device}-full.png`, fullPage: true });
+                  if (motion === "no-preference" && name === "packages") {
+                    // Back of a plan card ("See benefits" flips it).
+                    await page.getByRole("button", { name: /See benefits|شوف المزايا/ }).first().click();
+                    await page.waitForTimeout(1500);
+                    await page.screenshot({ path: `${out}/packages-flipped-${locale}-${device}-top.png` });
+                  }
                   console.log("saved", name, locale, device, motion);
                 }
               }
