@@ -58,7 +58,7 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
   const price = formatMoney(plan.prices[interval], plan.currency, locale);
 
   return (
-    <div className="[perspective:1400px]">
+    <div className="h-full [perspective:1400px]">
       <motion.div
         ref={ref}
         onPointerMove={(e) => {
@@ -72,17 +72,23 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
           py.set(0);
         }}
         style={{ rotateX: reduce ? 0 : rx, rotateY: reduce ? 0 : ry, transformStyle: "preserve-3d" }}
-        className="relative"
+        className="relative h-full"
       >
+        {/*
+          Both faces share one grid cell, so the card is as tall as its taller face and the three
+          cards in a row match. (They used to be `absolute`, but `.card` in globals.css sets
+          `position: relative` outside Tailwind's layers and wins, so the hidden back face sat
+          under the front and left a large empty gap below every card.)
+        */}
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
           transition={{ duration: reduce ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
           style={{ transformStyle: "preserve-3d" }}
-          className="relative min-h-[520px]"
+          className="relative grid h-full"
         >
           {/* FRONT */}
           <div
-            className={`card absolute inset-0 flex flex-col overflow-hidden p-8 [backface-visibility:hidden] ${
+            className={`card col-start-1 row-start-1 flex flex-col overflow-hidden p-8 [backface-visibility:hidden] ${
               plan.recommended ? "border-ember/50 shadow-[0_0_0_1px_rgba(255,125,9,.35),0_30px_80px_-30px_rgba(255,125,9,.45)]" : ""
             }`}
             style={{
@@ -139,7 +145,7 @@ function PlanCard({ plan, interval, current }: { plan: PlanCardData; interval: I
 
           {/* BACK */}
           <div
-            className="card absolute inset-0 flex flex-col p-8 [backface-visibility:hidden] [transform:rotateY(180deg)]"
+            className="card col-start-1 row-start-1 flex flex-col p-8 [backface-visibility:hidden] [transform:rotateY(180deg)]"
             inert={!flipped}
           >
             <h3 className="display text-2xl">{plan.name}</h3>

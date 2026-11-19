@@ -31,7 +31,7 @@ export function GlossWhite() {
       clearcoat={1}
       clearcoatRoughness={0.15}
       emissive="#ffffff"
-      emissiveIntensity={0.6}
+      emissiveIntensity={0.85}
       envMapIntensity={1}
       toneMapped={false}
     />
