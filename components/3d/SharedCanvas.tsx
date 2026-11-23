@@ -32,7 +32,8 @@ export default function SharedCanvas({
       eventPrefix="client"
       frameloop={active ? "always" : "never"}
       dpr={dpr}
-      gl={{ antialias: tier !== "low", alpha: true, powerPreference: "high-performance", stencil: false }}
+      // Smoothed edges everywhere: without it the logo's outline is jagged on phones (cheap on their GPUs).
+      gl={{ antialias: true, alpha: true, powerPreference: "high-performance", stencil: false }}
       onCreated={({ gl }) => {
         gl.toneMapping = ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.05;
