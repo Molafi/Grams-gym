@@ -12,7 +12,7 @@ function HeroPoster({ logoSrc }: { logoSrc: string | null }) {
     <div className="relative h-full w-full">
       <div className="absolute inset-[12%] rounded-full bg-[radial-gradient(closest-side,rgba(255,125,9,.18),transparent)] blur-2xl" />
       <div className="absolute inset-0 flex items-center justify-center">
-        <Logo src={logoSrc} className="aspect-square w-full drop-shadow-[0_30px_60px_rgba(0,0,0,.6)]" />
+        <Logo src={logoSrc} sizes="(min-width: 1024px) 640px, 100vw" className="aspect-square w-full drop-shadow-[0_30px_60px_rgba(0,0,0,.6)]" />
       </div>
       <div className="absolute inset-x-[18%] bottom-[14%] h-6 rounded-[50%] bg-black/70 blur-xl" />
     </div>

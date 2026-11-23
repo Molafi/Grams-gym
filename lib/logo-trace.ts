@@ -253,43 +253,54 @@ export function traceOutlines(rgba: ArrayLike<number>, w: number, h: number, opt
  * Gives every transparent pixel the colour of the nearest opaque ones (in place, `passes`
  * pixels deep) and makes the image fully opaque. Texture filtering then never blends the
  * logo's edges with black, and the extruded sides pick up the colour of their edge.
+ * Only the pixels next to the coloured area are visited, so large images stay fast.
  */
 export function bleedColors(rgba: Uint8ClampedArray | Uint8Array, w: number, h: number, passes: number, level = 127.5): void {
-  let known = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) known[i] = rgba[i * 4 + 3]! > level ? 1 : 0;
-  for (let pass = 0; pass < passes; pass++) {
-    const next = known.slice();
-    let changed = false;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const i = y * w + x;
-        if (known[i]) continue;
-        let r = 0, g = 0, b = 0, n = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          const yy = y + dy;
-          if (yy < 0 || yy >= h) continue;
-          for (let dx = -1; dx <= 1; dx++) {
-            const xx = x + dx;
-            if (xx < 0 || xx >= w || (dx === 0 && dy === 0)) continue;
-            const j = yy * w + xx;
-            if (!known[j]) continue;
-            r += rgba[j * 4]!;
-            g += rgba[j * 4 + 1]!;
-            b += rgba[j * 4 + 2]!;
-            n++;
-          }
-        }
-        if (n > 0) {
-          rgba[i * 4] = Math.round(r / n);
-          rgba[i * 4 + 1] = Math.round(g / n);
-          rgba[i * 4 + 2] = Math.round(b / n);
-          next[i] = 1;
-          changed = true;
-        }
+  const n = w * h;
+  const known = new Uint8Array(n);
+  const queued = new Uint8Array(n);
+  for (let i = 0; i < n; i++) known[i] = rgba[i * 4 + 3]! > level ? 1 : 0;
+  const neighbours = (i: number, visit: (j: number) => void) => {
+    const x = i % w;
+    const y = (i - x) / w;
+    for (let dy = -1; dy <= 1; dy++) {
+      const yy = y + dy;
+      if (yy < 0 || yy >= h) continue;
+      for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx;
+        if (xx < 0 || xx >= w || (dx === 0 && dy === 0)) continue;
+        visit(yy * w + xx);
       }
     }
-    known = next;
-    if (!changed) break;
+  };
+  const enqueue = (list: number[]) => (j: number) => {
+    if (!known[j] && !queued[j]) {
+      queued[j] = 1;
+      list.push(j);
+    }
+  };
+
+  // Each pass colours the transparent pixels touching the coloured area, one pixel deeper.
+  let frontier: number[] = [];
+  for (let i = 0; i < n; i++) if (known[i]) neighbours(i, enqueue(frontier));
+  for (let pass = 0; pass < passes && frontier.length > 0; pass++) {
+    for (const i of frontier) {
+      let r = 0, g = 0, b = 0, count = 0;
+      neighbours(i, (j) => {
+        if (!known[j]) return;
+        r += rgba[j * 4]!;
+        g += rgba[j * 4 + 1]!;
+        b += rgba[j * 4 + 2]!;
+        count++;
+      });
+      rgba[i * 4] = Math.round(r / count);
+      rgba[i * 4 + 1] = Math.round(g / count);
+      rgba[i * 4 + 2] = Math.round(b / count);
+    }
+    for (const i of frontier) known[i] = 1;
+    const next: number[] = [];
+    for (const i of frontier) neighbours(i, enqueue(next));
+    frontier = next;
   }
-  for (let i = 0; i < w * h; i++) rgba[i * 4 + 3] = 255;
+  for (let i = 0; i < n; i++) rgba[i * 4 + 3] = 255;
 }
