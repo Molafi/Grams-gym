@@ -34,6 +34,22 @@ for (const [device, opts] of Object.entries(viewports)) {
         const tag = motion === "reduce" ? "-poster" : "";
         await page.screenshot({ path: `${out}/${name}${tag}-${locale}-${device}-top.png` });
         if (motion === "no-preference") await page.screenshot({ path: `${out}/${name}-${locale}-${device}-full.png`, fullPage: true });
+        if (motion === "no-preference" && name === "home") {
+          // Part-way through the pinned 3D story, then the very end of the page (footer).
+          const scrollTo = (share) =>
+            page.evaluate((s) => {
+              const el = document.getElementById("story");
+              if (!el) return;
+              const top = el.getBoundingClientRect().top + window.scrollY;
+              window.scrollTo(0, top + (el.offsetHeight - window.innerHeight) * s);
+            }, share);
+          await scrollTo(0.3);
+          await page.waitForTimeout(3000);
+          await page.screenshot({ path: `${out}/home-story-${locale}-${device}.png` });
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+          await page.waitForTimeout(1500);
+          await page.screenshot({ path: `${out}/home-bottom-${locale}-${device}.png` });
+        }
         if (motion === "no-preference" && name === "packages") {
           // Back of a plan card ("See benefits" flips it).
           const flipped = await page
