@@ -10,6 +10,8 @@ const SharedCanvas = dynamic(() => import("./SharedCanvas"), { ssr: false });
 type Ctx = {
   /** "off" until idle + capability check; then the chosen tier. */
   tier: QualityTier;
+  /** True once the capability check ran, so "off" really means no 3D on this device. */
+  detected: boolean;
   register: (id: string) => () => void;
   setVisible: (id: string, visible: boolean) => void;
   canvasReady: boolean;
@@ -31,6 +33,7 @@ export function useScene() {
  */
 export function SceneProvider({ children }: { children: ReactNode }) {
   const [tier, setTier] = useState<QualityTier>("off");
+  const [detected, setDetected] = useState(false);
   const [slots, setSlots] = useState(0);
   const [anyVisible, setAnyVisible] = useState(false);
   const [canvasReady, setCanvasReady] = useState(false);
@@ -38,7 +41,10 @@ export function SceneProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
-    const run = () => setTier(detectTier());
+    const run = () => {
+      setTier(detectTier());
+      setDetected(true);
+    };
     if (w.requestIdleCallback) {
       const id = w.requestIdleCallback(run, { timeout: 2500 });
       return () => w.cancelIdleCallback?.(id);
@@ -71,7 +77,7 @@ export function SceneProvider({ children }: { children: ReactNode }) {
     setAnyVisible(visible.current.size > 0);
   }, []);
 
-  const value = useMemo(() => ({ tier, register, setVisible, canvasReady, setCanvasReady }), [tier, register, setVisible, canvasReady]);
+  const value = useMemo(() => ({ tier, detected, register, setVisible, canvasReady, setCanvasReady }), [tier, detected, register, setVisible, canvasReady]);
 
   return (
     <SceneContext.Provider value={value}>

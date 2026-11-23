@@ -49,9 +49,12 @@ export function HeroStage({ children, sceneLabel, bgSrc, logoSrc }: { children: 
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_60%_at_50%_120%,rgba(11,42,74,.5),transparent_70%)]" />
       <div className="mx-auto grid min-h-[100svh] max-w-[1320px] grid-cols-1 items-center gap-6 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:px-12">
         <div className="relative z-10">{children}</div>
+        {/* No flat logo while the 3D one loads: it turns in by itself. The flat one is only for
+            devices without 3D (reduced motion, no WebGL, data saver). */}
         <SceneSlot
           scene={{ kind: "hero", dir: locale === "ar" ? "rtl" : "ltr", logoSrc }}
           poster={<HeroPoster logoSrc={logoSrc} />}
+          posterOnlyAsFallback
           label={sceneLabel}
           className="order-first aspect-square w-full max-w-[640px] justify-self-center lg:order-none"
         />
