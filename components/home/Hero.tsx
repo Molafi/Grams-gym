@@ -32,7 +32,7 @@ export async function Hero({ locale }: { locale: string }) {
           {t("ctaSecondary")}
         </ExternalButton>
       </div>
-      <a href="#story" className="mt-16 hidden items-center gap-3 text-xs text-muted transition-colors hover:text-ink lg:inline-flex">
+      <a href="#packages" className="mt-16 hidden items-center gap-3 text-xs text-muted transition-colors hover:text-ink lg:inline-flex">
         <span className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline">
           <ArrowDown className="h-4 w-4" aria-hidden />
         </span>

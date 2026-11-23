@@ -1,17 +1,24 @@
 # Visual check for branches: builds the site against a seeded throwaway database and saves
-# screenshots (Arabic + English, desktop + mobile) as a downloadable artifact on the run page.
+# screenshots (Arabic + English, desktop + mobile, plus frames of the hero logo animation) as a
+# downloadable artifact on the run page. Run it by hand with `base_url` to capture a deployed
+# site instead (read-only page visits; nothing is built).
 name: Screenshots
 
 on:
   push:
     branches-ignore: [main]
   workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Capture this deployed site instead of building the branch (e.g. https://grams-gym-qtww.vercel.app)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
 
 concurrency:
-  group: screenshots-${{ github.ref }}
+  group: screenshots-${{ github.ref }}-${{ inputs.base_url }}
   cancel-in-progress: true
 
 jobs:
@@ -38,6 +45,7 @@ jobs:
       AUTH_TRUST_HOST: "true"
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_TELEMETRY_DISABLED: "1"
+      BASE_URL: ${{ inputs.base_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,69 +53,24 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - name: Database with plans and demo products
+        if: ${{ !inputs.base_url }}
         run: npx prisma db push --skip-generate && npm run db:seed
-      - run: npm run build
+      - if: ${{ !inputs.base_url }}
+        run: npm run build
       - run: npx playwright install --with-deps chromium
       - name: Start the site
+        if: ${{ !inputs.base_url }}
         run: |
           npm start > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3000/ar && exit 0; sleep 2; done
           cat "$RUNNER_TEMP/server.log"; exit 1
       - name: Take screenshots
-        run: |
-          # Written into the checkout (not committed) so `@playwright/test` resolves from node_modules.
-          cat > shots.mjs <<'EOF'
-          import { chromium } from "@playwright/test";
-          import { mkdirSync } from "node:fs";
-
-          const base = "http://localhost:3000";
-          const out = "screenshots";
-          mkdirSync(out, { recursive: true });
-          // SwiftShader gives headless Chromium WebGL, so the 3D hero renders too.
-          const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
-          const viewports = {
-            desktop: { viewport: { width: 1440, height: 900 } },
-            mobile: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
-          };
-          const pages = [
-            ["home", "/"],
-            ["packages", "/packages"],
-            ["contact", "/contact"],
-            ["product", "/shop/demo-forge-whey"],
-          ];
-          for (const [device, opts] of Object.entries(viewports)) {
-            for (const motion of ["no-preference", "reduce"]) {
-              const context = await browser.newContext({ ...opts, reducedMotion: motion });
-              const page = await context.newPage();
-              for (const locale of ["ar", "en"]) {
-                for (const [name, path] of pages) {
-                  // Reduced motion shows the static poster (logo image) instead of 3D: only needed for the hero.
-                  if (motion === "reduce" && name !== "home") continue;
-                  await page.goto(`${base}/${locale}${path}`, { waitUntil: "networkidle" });
-                  await page.waitForTimeout(6000); // idle callback + 3D fade-in
-                  const tag = motion === "reduce" ? "-poster" : "";
-                  await page.screenshot({ path: `${out}/${name}${tag}-${locale}-${device}-top.png` });
-                  if (motion === "no-preference") await page.screenshot({ path: `${out}/${name}-${locale}-${device}-full.png`, fullPage: true });
-                  if (motion === "no-preference" && name === "packages") {
-                    // Back of a plan card ("See benefits" flips it).
-                    await page.getByRole("button", { name: /See benefits|شوف المزايا/ }).first().click();
-                    await page.waitForTimeout(1500);
-                    await page.screenshot({ path: `${out}/packages-flipped-${locale}-${device}-top.png` });
-                  }
-                  console.log("saved", name, locale, device, motion);
-                }
-              }
-              await context.close();
-            }
-          }
-          await browser.close();
-          EOF
-          node shots.mjs
+        run: node scripts/screenshots.mjs
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
           path: screenshots/
           retention-days: 7
-      - if: failure()
+      - if: failure() && !inputs.base_url
         run: cat "$RUNNER_TEMP/server.log" || true

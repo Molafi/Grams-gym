@@ -15,12 +15,13 @@ export default async function HomePage({ params }: PageProps) {
   return (
     <>
       <Hero locale={locale} />
-      <StorySection />
       <PackagesPreview locale={locale} />
       <ShopHighlights locale={locale} />
       <FacilitiesStrip locale={locale} />
       <CoachesGrid locale={locale} />
       <ConsultationCTA locale={locale} />
+      {/* The scroll story with the 3D weights closes the page, right above the footer. */}
+      <StorySection />
     </>
   );
 }

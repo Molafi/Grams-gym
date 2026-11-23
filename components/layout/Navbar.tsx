@@ -59,11 +59,8 @@ export function Navbar({ user, products, logoSrc }: { user: NavUser; products: P
         style={{ top: "var(--ribbon-h, 0px)" }}
       >
         <nav className="mx-auto flex h-[72px] max-w-[1320px] items-center gap-6 px-5 sm:px-8 lg:px-12" aria-label="Main">
-          <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="GRAMS GYM">
-            <Logo src={logoSrc} className="h-11 w-11" />
-            <span className="hidden font-[family-name:var(--font-latin)] text-[13px] font-semibold tracking-[0.28em] sm:inline" dir="ltr">
-              GRAMS <span className="text-ember">GYM</span>
-            </span>
+          <Link href="/" className="flex shrink-0 items-center" aria-label="GRAMS GYM">
+            <Logo src={logoSrc} className="h-14 w-14" />
           </Link>
 
           <ul className="ms-6 hidden items-center gap-1 lg:flex">

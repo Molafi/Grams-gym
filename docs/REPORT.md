@@ -20,8 +20,9 @@ commit it to pin versions.
 - "Obsidian & Ember" design system, Space Grotesk + Noto Kufi Arabic + IBM Plex Sans Arabic, Arabic-specific
   typography rules, Lenis, masked reveals, magnetic CTA, ⌘K palette (pages + products), soft cursor, toasts, skeletons.
 - 3D: single shared canvas + drei Views, lazy after idle, quality tiers, PerformanceMonitor DPR, pause off-screen,
-  posters for reduced motion / no WebGL. Hero GG monogram (extruded, brushed silver, ember rim, orbiting calibration
-  weights, pointer parallax, scroll exit, RTL mirror). Each-Gram-Matters pinned story (weight → kettlebell → plate →
+  posters for reduced motion / no WebGL. Hero 3D logo extruded from the logo image itself (traced outline, artwork
+  on the front; drawn GG as fallback), turn-in intro, a full turn every 9 s, ember rim, orbiting calibration
+  weights, pointer parallax, scroll exit, RTL mirror. Each-Gram-Matters pinned story (weight → kettlebell → plate →
   barbell, 1 g → 20,000 g counter, 8+/2000+ stats). Procedural supplement packs with CanvasTexture labels from
   product data, optional GLB override, full-screen draggable viewer, fly-to-cart.
 - Auth.js: membership number + password (scrypt), self-registration, staff-issued temporary passwords, test member/admin (env-gated, prod hard-block), JWT with role refresh, RBAC MEMBER/STAFF/ADMIN.
@@ -51,7 +52,7 @@ commit it to pin versions.
   card grain is CSS. If you want bloom on the hero only, give the hero its own canvas.
 - Membership cards are CSS-3D (tilt, flip, edge light), not WebGL — keeps text/prices accessible and fast.
 - Rendering pause uses `frameloop` never/always driven by IntersectionObserver rather than `demand`.
-- The monogram is a geometric rebuild (no vector logo received).
+- The small inline GG mark (and the 3D fallback) is a geometric rebuild; the hero 3D logo is traced from the PNG.
 - Rate limiter is in-memory (per instance).
 - No database migrations are committed (could not run Prisma here) — `prisma migrate dev --name init` creates them.
 - OG images use the site metadata only; no generated localized OG image yet.

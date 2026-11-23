@@ -1,40 +1,83 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { ContactShadows, Float, PerspectiveCamera, Sparkles, View } from "@react-three/drei";
-import { MathUtils, type Group, type PerspectiveCamera as PerspectiveCameraImpl } from "three";
+import { MathUtils, type Group, type PerspectiveCamera as PerspectiveCameraImpl, type PointLight } from "three";
 import { scrollStore } from "@/components/motion/scroll-store";
 import { pointerStore } from "./pointer-store";
 import { TIER_SETTINGS, type QualityTier } from "./quality";
 import { Studio } from "./materials";
-import { Barbell, CalibrationRing, CalibrationWeight, GGMonogram, Kettlebell, OlympicPlate, SupplementPack, type PackProps } from "./models";
+import { Barbell, CalibrationRing, CalibrationWeight, Kettlebell, OlympicPlate, SupplementPack, type PackProps } from "./models";
+import { LogoModel } from "./LogoModel";
 
 export type SceneProps =
-  | { kind: "hero"; dir: "rtl" | "ltr" }
+  | { kind: "hero"; dir: "rtl" | "ltr"; logoSrc: string | null }
   | { kind: "story" }
   | { kind: "pack"; pack: PackProps; turntable?: boolean };
 
 type Tier = Exclude<QualityTier, "off">;
 
-/* ─── Hero: The Forged GG ──────────────────────────────────────────────── */
+/* ─── Hero: the GRAMS GYM logo ─────────────────────────────────────────── */
 
-function HeroScene({ tier, dir }: { tier: Tier; dir: "rtl" | "ltr" }) {
+/** Intro: the logo turns in from its back and grows into place. */
+const INTRO_S = 1.8;
+/** Then a full turn every SPIN_EVERY_S seconds, lasting SPIN_S. */
+const SPIN_EVERY_S = 9;
+const SPIN_S = 1.6;
+const LOGO_WIDTH = 3.1;
+
+const easeOutCubic = (x: number) => 1 - (1 - x) ** 3;
+/** Overshoots a little before settling, so the logo lands with a bounce. */
+const easeOutBack = (x: number) => 1 + 2.70158 * (x - 1) ** 3 + 1.70158 * (x - 1) ** 2;
+const easeInOutCubic = (x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
+
+function HeroScene({ tier, dir, logoSrc }: { tier: Tier; dir: "rtl" | "ltr"; logoSrc: string | null }) {
   const s = TIER_SETTINGS[tier];
   const group = useRef<Group>(null);
+  const logo = useRef<Group>(null);
+  const ring = useRef<Group>(null);
+  const sweep = useRef<PointLight>(null);
   const cam = useRef<PerspectiveCameraImpl>(null);
+  const ready = useRef(false);
+  const readyAt = useRef<number | null>(null);
+  const onReady = useCallback(() => {
+    ready.current = true;
+  }, []);
   const mirror = dir === "rtl" ? -1 : 1;
 
   useFrame((state, dt) => {
     const g = group.current;
-    if (!g) return;
+    const l = logo.current;
+    if (!g || !l) return;
     const exit = scrollStore.hero;
     const t = state.clock.elapsedTime;
-    // Pointer parallax (damped) + slow idle sway; exit turns the monogram edge-on.
-    const targetY = pointerStore.x * 0.28 * mirror + Math.sin(t * 0.25) * 0.08 + exit * (Math.PI / 2) * mirror;
-    const targetX = -pointerStore.y * 0.16 + exit * 0.15;
+    if (ready.current && readyAt.current === null) readyAt.current = t;
+    const since = readyAt.current === null ? 0 : t - readyAt.current;
+    const started = readyAt.current !== null;
+
+    // Whole stage: pointer parallax (damped) + idle sway; scrolling away turns it edge-on.
+    const targetY = pointerStore.x * 0.3 * mirror + Math.sin(t * 0.35) * 0.14 + exit * (Math.PI / 2) * mirror;
+    const targetX = -pointerStore.y * 0.18 + Math.sin(t * 0.5) * 0.04 + exit * 0.15;
     g.rotation.y = MathUtils.damp(g.rotation.y, targetY, 3.2, dt);
     g.rotation.x = MathUtils.damp(g.rotation.x, targetX, 3.2, dt);
+
+    // The logo itself: turns in from its back with a bounce, then a full turn (with a small
+    // hop) every few seconds. A turn of 2π ends exactly where it started, so there's no jump.
+    const intro = started ? Math.min(1, since / INTRO_S) : 0;
+    const cycle = since - INTRO_S;
+    const phase = cycle > 0 ? cycle % SPIN_EVERY_S : 0;
+    const spinStart = SPIN_EVERY_S - SPIN_S;
+    const spin = cycle > 0 && phase > spinStart ? easeInOutCubic((phase - spinStart) / SPIN_S) : 0;
+    l.rotation.y = ((1 - easeOutBack(intro)) * Math.PI + spin * Math.PI * 2) * mirror;
+    const grow = started ? easeOutCubic(Math.min(1, since / 1.2)) : 0;
+    l.scale.setScalar(0.6 + 0.4 * grow);
+    l.position.y = (grow - 1) * 0.35 + Math.sin(spin * Math.PI) * 0.16;
+    if (ring.current) ring.current.scale.setScalar(Math.max(0.0001, started ? easeOutCubic(Math.min(1, since / 1.6)) : 0));
+
+    // A light that drifts across the front, so highlights move over the logo.
+    sweep.current?.position.set(Math.sin(t * 0.7) * 3.4 * mirror, 1.1 + Math.cos(t * 0.45) * 0.9, 3.2);
+
     if (cam.current) {
       cam.current.position.z = MathUtils.damp(cam.current.position.z, 6 + exit * 3.2, 4, dt);
       cam.current.position.y = MathUtils.damp(cam.current.position.y, 0.2 + exit * 0.6, 4, dt);
@@ -46,13 +89,16 @@ function HeroScene({ tier, dir }: { tier: Tier; dir: "rtl" | "ltr" }) {
     <>
       <PerspectiveCamera ref={cam} makeDefault position={[0, 0.2, 6]} fov={32} />
       <Studio resolution={s.envRes} rimSide={mirror as 1 | -1} />
+      <pointLight ref={sweep} position={[0, 1.1, 3.2]} intensity={10} distance={9} color="#ffffff" />
       <group ref={group}>
-        <Float speed={1.1} rotationIntensity={0.15} floatIntensity={0.35} floatingRange={[-0.06, 0.06]}>
-          <group scale={1.55}>
-            <GGMonogram />
+        <Float speed={1.5} rotationIntensity={0.25} floatIntensity={0.6} floatingRange={[-0.1, 0.1]}>
+          <group ref={logo}>
+            <LogoModel src={logoSrc} width={LOGO_WIDTH} onReady={onReady} />
           </group>
         </Float>
-        <CalibrationRing count={s.orbiters} radius={2.25} />
+        <group ref={ring}>
+          <CalibrationRing count={s.orbiters} radius={2.25} />
+        </group>
       </group>
       {s.shadows ? <ContactShadows position={[0, -1.35, 0]} opacity={0.55} scale={9} blur={2.6} far={3.5} resolution={256} color="#000000" /> : null}
       {s.sparkles > 0 ? <Sparkles count={s.sparkles} scale={[7, 3.5, 3]} size={1.6} speed={0.18} opacity={0.32} color="#ffe2c4" /> : null}
@@ -144,7 +190,7 @@ function PackScene({ tier, pack, turntable = true }: { tier: Tier; pack: PackPro
 export default function SceneView(props: SceneProps & { tier: Tier }) {
   return (
     <View className="absolute inset-0">
-      {props.kind === "hero" ? <HeroScene tier={props.tier} dir={props.dir} /> : null}
+      {props.kind === "hero" ? <HeroScene tier={props.tier} dir={props.dir} logoSrc={props.logoSrc} /> : null}
       {props.kind === "story" ? <StoryScene tier={props.tier} /> : null}
       {props.kind === "pack" ? <PackScene tier={props.tier} pack={props.pack} turntable={props.turntable} /> : null}
     </View>
