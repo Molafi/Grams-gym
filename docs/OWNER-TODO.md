@@ -38,9 +38,10 @@ this use case. Sources: [Activate your store](https://docs.lemonsqueezy.com/help
 - [ ] Optional: real 3D models (`.glb`, Draco-compressed) for hero products.
 
 ## Assets (received — replace any of them in `/admin/media`)
-- [x] Logo (`public/images/logo.png`, 447 × 447, transparent) — used in the navbar, footer, sign-in, member card.
-      The 3D hero logo is built from this same image (the `logo` slot in `/admin/media`), so it must keep a
-      transparent background. A larger transparent PNG (≥ 1000 px wide) would make the 3D logo sharper.
+- [x] Logo (`public/images/logo.png`, 2048 × 2048, transparent) — used in the navbar, footer, sign-in, member card.
+      Redrawn as sharp vector shapes from the original 447 px file (vector copy: `public/images/logo.svg`).
+      The 3D hero logo is built from this same image (the `logo` slot in `/admin/media`), so a replacement must
+      keep a transparent background. The owner's original vector file (SVG/AI/PDF) would still match best.
 - [x] Hero photo of the navy GG wall (1944 × 1296, `public/images/hero.jpg`) — no longer shown behind the 3D logo;
       the "Home page background" slot is empty by default.
 - [ ] **Higher-resolution photos.** Coach portraits, gym interior, machines and cardio are only **206 × 206 px** and

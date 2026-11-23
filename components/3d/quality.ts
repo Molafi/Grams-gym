@@ -2,10 +2,15 @@
 
 export type QualityTier = "off" | "low" | "medium" | "high";
 
+/**
+ * Render resolution starts at the top of `dpr` and steps down to the bottom on slow devices
+ * (PerformanceMonitor in SharedCanvas). Phones are "low": below 1.5 the logo looked blocky
+ * on their 2–3× screens.
+ */
 export const TIER_SETTINGS: Record<Exclude<QualityTier, "off">, { dpr: [number, number]; shadows: boolean; sparkles: number; orbiters: number; envRes: number }> = {
-  low: { dpr: [1, 1.25], shadows: false, sparkles: 0, orbiters: 8, envRes: 64 },
-  medium: { dpr: [1, 1.5], shadows: true, sparkles: 40, orbiters: 12, envRes: 128 },
-  high: { dpr: [1, 1.75], shadows: true, sparkles: 80, orbiters: 16, envRes: 256 },
+  low: { dpr: [1, 1.5], shadows: false, sparkles: 0, orbiters: 8, envRes: 64 },
+  medium: { dpr: [1, 1.75], shadows: true, sparkles: 40, orbiters: 12, envRes: 128 },
+  high: { dpr: [1, 2], shadows: true, sparkles: 80, orbiters: 16, envRes: 256 },
 };
 
 function hasWebGL(): boolean {
