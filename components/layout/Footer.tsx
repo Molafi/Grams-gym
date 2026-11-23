@@ -22,12 +22,7 @@ export async function Footer({ locale }: { locale: string }) {
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-ember/50 to-transparent" />
       <Container className="grid gap-14 py-20 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
         <div>
-          <div className="flex items-center gap-3">
-            <Logo src={media.logo.src} className="h-14 w-14" />
-            <p className="font-[family-name:var(--font-latin)] text-xl font-semibold tracking-[0.12em]" dir="ltr">
-              GRAMS <span className="text-ember">GYM</span>
-            </p>
-          </div>
+          <Logo src={media.logo.src} className="h-20 w-20" alt="GRAMS GYM" />
           <p className="mt-6 max-w-sm text-sm text-muted">{t("about")}</p>
           <a
             href={site.maps.url}

@@ -31,7 +31,7 @@ export async function PackagesPreview({ locale }: { locale: string }) {
   const plans = await orEmpty("plans", getActivePlans);
   if (plans.length === 0) return null;
   return (
-    <section className="py-20 sm:py-24" aria-labelledby="packages-title">
+    <section id="packages" className="py-20 sm:py-24" aria-labelledby="packages-title">
       <Container>
         <SectionHeading eyebrow={t("eyebrow")} title={<span id="packages-title">{t("title")}</span>} subtitle={t("subtitle")} className="mx-auto mb-10 text-center [&_p]:mx-auto [&_.eyebrow]:justify-center" />
         <PlanCards plans={plans.map((p) => toPlanCard(p, locale))} />

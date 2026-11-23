@@ -18,7 +18,9 @@ export const media = {
     tone: "navy",
   },
   heroBg: {
-    src: "/images/hero.jpg",
+    // Off by default: the photo of the GG wall showed a second logo behind the 3D logo.
+    // An admin can still upload a background here (shown dimmed behind the hero).
+    src: null,
     alt: { ar: "جدار جرامز جيم الأزرق مع شعار GG", en: "The navy GRAMS GYM wall with the GG monogram" },
     tone: "navy",
   },
