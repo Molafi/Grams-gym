@@ -54,6 +54,9 @@ export class SignInRateLimited extends CredentialsSignin {
 const FAIL_WINDOW = 15 * 60_000;
 const FAILS_PER_IP = 8;
 const FAILS_PER_NUMBER = 100;
+/** First sign-ins with the membership number as password (lib/auth/default-password.ts), per IP. */
+const FIRST_SIGNINS_PER_IP = 10;
+const FIRST_SIGNIN_WINDOW = 60 * 60_000;
 
 const memberSchema = z.object({
   memberNumber: z.string().min(1).max(20),
@@ -97,6 +100,11 @@ const providers: Provider[] = [
       // First sign-in of a member from the old gym program: the membership number is the
       // password until they choose their own (lib/auth/default-password.ts).
       const firstSignIn = !verified && user !== null && canUseDefaultPassword(user) && isDefaultPassword(parsed.data.password, number);
+      // Anyone who knows a number could try it: cap first sign-ins per connection, so nobody
+      // can open member after member (a family or the gym Wi-Fi stays well below this).
+      const firstKey = `first-signin:${ip}`;
+      if (firstSignIn && isLimited(firstKey, FIRST_SIGNINS_PER_IP)) throw new SignInRateLimited();
+      if (firstSignIn) hit(firstKey, FIRST_SIGNINS_PER_IP, FIRST_SIGNIN_WINDOW);
       if (!user || !(verified || firstSignIn)) {
         hit(ipKey, FAILS_PER_IP, FAIL_WINDOW);
         hit(numberKey, FAILS_PER_NUMBER, FAIL_WINDOW);

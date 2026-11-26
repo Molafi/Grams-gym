@@ -50,6 +50,10 @@ const NEW_PASSWORD = "Gym-pass-2026!";
 try {
   eq("can't be made admin before choosing a password", await promote(), 0);
 
+  await page.goto(`${base}/en/signin`);
+  await page.getByText("First time here? Your password is your membership number.").waitFor();
+  check("sign-in page explains the first password", true);
+
   await signIn("03664", "03664");
   await page.waitForURL(/\/en\/account/);
   await page.getByText("Choose your own password").waitFor();
@@ -63,9 +67,12 @@ try {
   await change.locator('input[name="confirm"]').fill(NEW_PASSWORD);
   await change.locator('button[type="submit"]').click();
   await page.getByText("Choose your own password").waitFor({ state: "detached" });
+  // Back on the account page (not the sign-in page), past the password step.
+  await page.waitForURL(/\/en\/account/);
+  await page.getByTestId("member-number").waitFor();
   const saved = await db.user.findUnique({ where: { memberNumber: 3664 } });
   check("password saved and no longer temporary", Boolean(saved?.passwordHash) && saved?.mustChangePassword === false);
-  check("still signed in after choosing it", page.url().includes("/en/account"), page.url());
+  check("still signed in after choosing it", (await page.getByText("Choose your own password").count()) === 0, page.url());
   await shot("2-password-chosen");
 
   await signOut();
@@ -115,10 +122,6 @@ try {
   const number = Number((await page.getByTestId("member-number").textContent())?.trim());
   check("a website sign-up gets a number from 50000", number >= 50000, `got ${number}`);
   await shot("5-sign-up");
-
-  await page.goto(`${base}/en/signin`);
-  await page.getByText("First time here? Your password is your membership number.").waitFor();
-  check("sign-in page explains the first password", true);
 } catch (e) {
   failed++;
   console.error("✖", e instanceof Error ? e.message : e);
