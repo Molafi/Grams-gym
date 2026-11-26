@@ -29,6 +29,10 @@ async function main() {
     const password = temporaryPassword();
     const passwordHash = await hashPassword(password);
     const digits = phoneDigits(phone);
+    // Same rule as lib/site-numbers.ts: accounts made here get numbers from 50000, never one the old gym program uses.
+    await db.$queryRawUnsafe(
+      `SELECT setval(pg_get_serial_sequence('"User"', 'memberNumber'), GREATEST(49999, COALESCE(pg_sequence_last_value(pg_get_serial_sequence('"User"', 'memberNumber')::regclass), 0)))`,
+    );
     const existing = await db.user.findUnique({ where: { phoneDigits: digits }, select: { id: true } });
     const user = existing
       ? await db.user.update({

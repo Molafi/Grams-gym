@@ -5,6 +5,7 @@ import { lsVariantId } from "@/lib/env";
 import { requireRole } from "@/lib/auth/guards";
 import { toMajorString } from "@/lib/money";
 import { PlanForm } from "@/features/admin/PlanForm";
+import { SYNC_PLAN_SLUG } from "@/features/admin/legacy-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,8 @@ export default async function AdminPlansPage({ params }: PageProps) {
   setRequestLocale(locale);
   await requireRole(locale, "ADMIN", `/${locale}/admin/plans`);
   const t = await getTranslations({ locale, namespace: "admin" });
-  const plans = await db.plan.findMany({ where: { kind: "membership" }, orderBy: { sortOrder: "asc" } });
+  // The plan for memberships from the gym program (features/admin/legacy-sync.ts) isn't sold here.
+  const plans = await db.plan.findMany({ where: { kind: "membership", slug: { not: SYNC_PLAN_SLUG } }, orderBy: { sortOrder: "asc" } });
 
   return (
     <div className="space-y-8">

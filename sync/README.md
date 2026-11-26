@@ -1,123 +1,118 @@
-# Legacy desktop-DB → cloud sync
+# Sync: old gym program → website
 
-Mirrors the **GramsGym Windows program's** database (`gymgdata`, a MySQL/MariaDB served
-by XAMPP on the gym PC) into the Grams-gym cloud Postgres, in **near-real-time**.
+Keeps the website's members and memberships up to date from the **GramsGym Windows program**
+(its MySQL/MariaDB database `gymgdata`, served by XAMPP on the gym PC).
 
 ```
-Gym PC                                           Cloud (this Next.js app)
-┌──────────────────┐                             ┌───────────────────────────┐
-│ GramsGym.exe      │                             │ POST /api/sync/legacy      │
-│   ▼ writes        │     reads (read-only)       │   • verifies HMAC signature│
-│ MySQL  gymgdata   │ ◄────────── sync agent ───► │   • upserts into legacy_*  │
-│ (XAMPP, port 3306)│      HTTPS + signature      │     Postgres tables        │
-└──────────────────┘      every few seconds       └───────────────────────────┘
+Gym PC                                           Website (Vercel)
+┌──────────────────┐   ┌──────────────┐  HTTPS   ┌────────────────────────────────────┐
+│ GramsGym program │──►│ sync agent   │────────► │ /api/sync/legacy                   │
+│ MySQL  gymgdata  │   │ (this folder)│ when     │  → copies of the program's tables   │
+└──────────────────┘   └──────────────┘ changed  │  → website members + memberships    │
+                       every 5 minutes           └────────────────────────────────────┘
 ```
 
-* The agent **only reads** the gym database (via a dedicated read-only `ggsync` login).
-  It never writes to it, so the desktop program is unaffected.
-* **Append tables** (check-ins, payments, …) are polled by primary key every few seconds —
-  this is the live path. **Full tables** (members, subscriptions, programs, …) are small
-  and re-sent every few minutes to pick up in-place edits (renewals, phone changes…).
-* Cursors are stored locally, so the agent resumes after a reboot or internet outage and
-  **loses nothing** — a cursor only advances after the cloud confirms the batch.
+* The agent **only reads** the gym database, with a read-only MySQL login. The desktop program
+  is unaffected.
+* Every 5 minutes it reads the member tables and sends them **only if something changed**.
+  The website then creates new members, updates names and phones, adds new memberships and
+  follows freezes. Admin → Import shows what arrived and when.
+* While the old program is in use, **make changes to members and memberships there**. The
+  website follows the program, not the other way round.
 
-## What gets synced
+## What the website does with it
 
-Stored verbatim in Postgres tables named `legacy_<table>` (e.g. `legacy_members`).
-BLOB columns (member/staff photos, fingerprint templates, free-text notes/addresses) and
-the `users` (app-login password hashes) and biometric `prints`/`sprints` tables are **not**
-mirrored — large and/or sensitive. Edit `sync/agent/config.json` + `lib/sync/legacy-schema.ts`
-to add more.
+* Every member keeps their number from the program (`04529`). It's their username; the first
+  time, their password is the same number, and the website then asks them to choose their own.
+* Memberships become front-desk memberships with the program's start and end dates: each
+  member's latest one, plus any that ended within the last year.
+* Accounts created on the website itself (online sign-up, staff) get numbers from **50000**,
+  so they never take a number the program will give its next member.
+* Not copied back: nothing flows from the website to the program.
 
-| Mode | Tables |
-|------|--------|
-| **append** (live, by `ID`) | `clocks` (check-ins), `attendance`, `payments`, `subscriptionsx` (archive), `messages_log`, `lists` |
-| **full** (small, re-upserted) | `members`, `programs`, `offers`, `subscriptions`, `freezes`, `staff`, `guests`, `dayuse`, lookups (`nationalities`, `jobtitles`, `contracts`, `shifts`), `campaigns`, `events`, `expenses*`, `transactions`, `accounts`, `variables` |
+By default only the tables the website needs are sent: `members`, `programs`, `offers`,
+`subscriptions`, `subscriptionsx` (the old archive), `freezes`. The agent can also mirror other
+tables (check-ins, payments, staff, expenses…) as a cloud copy: add their names to `config.json`
+(`"append": ["clocks", "payments"]`, `"full": [...]`). That stores more personal and business data
+in the cloud (staff salaries, national ID numbers) and uses more database time, so only do it if
+you need it.
 
-### Notes on this gym's data (decoded 2026-10)
+## Setup (Windows, on the gym PC)
 
-* `members.Gender` is always `1` (male-only gym); `Status` is always `1` (active).
-* `subscriptions` is the **live** table (updated daily); `subscriptionsx` is an older
-  archive frozen in Feb 2026 — both are mirrored so nothing is lost.
-* `clocks.Type`: `1` = member check-in, `2` = staff. `payments.Method`: `1`/`2`/`3` ≈ cash/card/other.
-* Money is JOD, stored as `decimal(10,5)` → mirrored as `numeric(14,5)`.
-* Dates/times are local (Asia/Amman) wall-clock and are stored unchanged (no TZ shifting).
+PowerShell commands, one at a time. Run PowerShell as Administrator.
 
-## Setup
-
-### 1. Cloud side (this app)
-
-1. Set a strong secret in the deployment environment:
+### 1. Website: the shared secret
+1. Make a secret (keep the window open; you'll paste it twice):
+   ```powershell
+   $b = New-Object byte[] 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
    ```
-   SYNC_SECRET=<openssl rand -base64 33>
-   ```
-   The endpoint returns **503** until this is set (min 16 chars). The `legacy_*` tables are
-   created automatically on first sync — no migration needed.
-2. Deploy. The endpoint lives at `https://<your-site>/api/sync/legacy`.
+2. Vercel → your project → Settings → Environment Variables → add `SYNC_SECRET` with that value
+   (Production), then Deployments → ⋯ → Redeploy. Until then the website answers 503.
 
-### 2. The read-only database login (already created on the gym PC)
+### 2. Node.js
+```powershell
+node -v
+```
+It must print v20 or higher. If not, install the LTS version from https://nodejs.org and open a new
+PowerShell window.
 
-A read-only MySQL user was added for the agent (SELECT on `gymgdata` only):
+### 3. The agent folder
+Copy this `sync/agent` folder to `C:\gg-sync`, then:
+```powershell
+cd C:\gg-sync
+npm install
+Copy-Item config.example.json config.json
+notepad config.json
+```
+In `config.json` set:
+* `cloud.url` → `https://YOUR-SITE/api/sync/legacy`
+* `cloud.secret` → the secret from step 1
+* `mysql.password` → the password of the read-only login (step 4)
 
+### 4. The read-only database login
+If it doesn't exist yet, create it with your own password (XAMPP's MySQL client):
+```powershell
+C:\xampp\mysql\bin\mysql.exe -u root -p
+```
 ```sql
-CREATE USER IF NOT EXISTS 'ggsync'@'localhost'  IDENTIFIED BY 'GgSync_ReadOnly_2026';
-CREATE USER IF NOT EXISTS 'ggsync'@'127.0.0.1'  IDENTIFIED BY 'GgSync_ReadOnly_2026';
+CREATE USER IF NOT EXISTS 'ggsync'@'localhost' IDENTIFIED BY 'choose-a-long-password';
+CREATE USER IF NOT EXISTS 'ggsync'@'127.0.0.1' IDENTIFIED BY 'choose-a-long-password';
 GRANT SELECT ON gymgdata.* TO 'ggsync'@'localhost';
 GRANT SELECT ON gymgdata.* TO 'ggsync'@'127.0.0.1';
 FLUSH PRIVILEGES;
 ```
+If it already exists with the password that used to be printed in this file, change it:
+`ALTER USER 'ggsync'@'localhost' IDENTIFIED BY '…'; ALTER USER 'ggsync'@'127.0.0.1' IDENTIFIED BY '…';`
 
-> Change this password in production and update `config.json` to match.
-
-### 3. The agent (on the gym PC)
-
-1. Install **Node.js 20+** (https://nodejs.org).
-2. Copy this `sync/agent` folder to the PC (e.g. `C:\gg-sync`).
-3. `cd C:\gg-sync` then `npm install`.
-4. Copy `config.example.json` → `config.json` and fill in:
-   * `cloud.url` — your deployed endpoint URL.
-   * `cloud.secret` — the **same** value as `SYNC_SECRET`.
-   * `mysql.password` — the `ggsync` password if you changed it.
-5. Test connectivity (reads nothing, just checks DB + cloud + shows cloud cursors):
-   ```
-   node agent.mjs --ping
-   ```
-6. Run it:
-   ```
-   node agent.mjs
-   ```
-   The first run backfills all history (a few minutes), then streams changes.
-
-### 4. Run it automatically (Windows service)
-
-So it starts with the PC and restarts on crash, use **NSSM** (https://nssm.cc):
-
+### 5. Test, then the first sync
+```powershell
+node agent.mjs --ping
+node agent.mjs --once
 ```
-nssm install GramsGymSync "C:\Program Files\nodejs\node.exe" "C:\gg-sync\agent.mjs"
-nssm set GramsGymSync AppDirectory "C:\gg-sync"
-nssm set GramsGymSync AppStdout "C:\gg-sync\agent.log"
-nssm set GramsGymSync AppStderr "C:\gg-sync\agent.log"
-nssm start GramsGymSync
+`--ping` must end with `website ok (true)`. The first `--once` sends everything (a minute or two)
+and ends with `website members updated: … new`. Check Admin → Import on the website: "Active right
+now" should be close to the program's **active** count, and names must look right. If Arabic names
+show as `Ø§Ù…...`, add `"charset": "cp1256"` to the `mysql` section and run `node agent.mjs --once --force`.
+
+### 6. Every 5 minutes, automatically
+```powershell
+schtasks /Create /TN "GramsGymSync" /TR "C:\gg-sync\run-once.cmd" /SC MINUTE /MO 5 /RU SYSTEM /F
 ```
+It runs in the background, also when nobody is signed in. Each run adds a few lines to
+`C:\gg-sync\agent.log`. Stop it with `schtasks /Delete /TN "GramsGymSync" /F`.
 
-## Verify it's working
-
-From anywhere, a signed `status` request returns row counts + last-synced time per table.
-Easiest check: on the PC run `node agent.mjs --ping` (shows the cloud's current cursors),
-then watch `agent.log` — new check-ins should appear within seconds of a member clocking in.
+Instead of the scheduled task, `node agent.mjs` also keeps running in an open window.
 
 ## Security
 
-* Every request is signed `HMAC-SHA256(timestamp + "." + body)` with `SYNC_SECRET`; the
-  server rejects bad signatures and timestamps older than 5 minutes (replay protection).
-* The agent's DB login is **read-only** and scoped to `gymgdata`.
-* Serve the endpoint over **HTTPS** only.
+* Every request is signed `HMAC-SHA256(timestamp + "." + body)` with `SYNC_SECRET`; the website
+  rejects bad signatures and timestamps older than 5 minutes (replay protection).
+* `config.json` holds the secret and the database password: it's ignored by git; keep it on the
+  gym PC only.
+* The database login is read-only and only for `gymgdata`.
 
 ## Limitations
 
-* One-way (gym PC → cloud). Changes made in the cloud do **not** flow back to the desktop
-  program (that would mean writing into the vendor's database — intentionally avoided).
-* The PC must be on and online for live updates; while it's off, changes queue up and
-  catch up automatically when it returns.
-* In-place edits to `members`/`subscriptions` appear at the **full-sync** cadence
-  (default 10 min), not instantly. New check-ins/payments are near-instant.
+* One way only: the program → the website.
+* A membership deleted in the program stays on the website (staff can cancel it there).
+* The PC must be on and online; while it's off, changes wait and go out on the next run.

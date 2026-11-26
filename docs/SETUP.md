@@ -37,7 +37,7 @@ Quality checks: `npm run lint && npm run typecheck && npm test && npm run build`
 E2E: `npx playwright install chromium && npm run test:e2e` (needs the DB seeded and no LS keys in `.env`).
 
 ## 2. Member sign-in (membership number + password)
-There is no Google sign-in. Everyone signs in at `/signin` with a **membership number** (shown as `GG-00042`)
+There is no Google sign-in. Everyone signs in at `/signin` with a **membership number** (shown as `00042`, as in the old gym program)
 and a password.
 - **New members online:** "Create account" on the sign-in page (name, phone, optional email, password). The
   membership number is shown right away on their account page.
@@ -51,8 +51,8 @@ and a password.
 ### Demo accounts
 | Account | Membership number | Password | Can |
 |---|---|---|---|
-| Test member | `GG-99001` | `TEST_MEMBER_PASSWORD` | everything a member can (test mode only) |
-| Guest admin | `GG-99002` | `GUEST_ADMIN_PASSWORD` (local default `guest-preview`) | **view** every admin page; saves, uploads, exports and check-ins are blocked |
+| Test member | `99001` | `TEST_MEMBER_PASSWORD` | everything a member can (test mode only) |
+| Guest admin | `99002` | `GUEST_ADMIN_PASSWORD` (local default `guest-preview`) | **view** every admin page; saves, uploads, exports and check-ins are blocked |
 
 Both are created by `npm run db:seed` (or on first one-click sign-in) and listed on `/signin` in test mode. The guest
 admin works on a deployed site only with `ENABLE_GUEST_ADMIN=true` and is signed out as soon as that is turned off.

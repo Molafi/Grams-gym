@@ -43,9 +43,23 @@ export type SubscriptionFilters = {
   withinDays?: number;
 };
 
-export async function listSubscriptions(f: SubscriptionFilters = {}): Promise<AdminSubscription[]> {
+/**
+ * Memberships that can still matter for "active now", "ending soon" and "expired in the last
+ * 30 days": no end date (card subscriptions), or an end date within this many days (bonus days
+ * can push access a little past the end date). Members imported from the old program bring
+ * thousands of old periods, so these views must not read "the latest 1000 rows" and count those.
+ */
+const RECENT_DAYS = 120;
+const recentOnly = (now: Date): Prisma.SubscriptionWhereInput => ({
+  OR: [{ endsAt: null }, { endsAt: { gte: new Date(now.getTime() - RECENT_DAYS * DAY) } }],
+});
+
+export async function listSubscriptions(f: SubscriptionFilters = {}, opts: { recent?: boolean } = {}): Promise<AdminSubscription[]> {
   const q = f.q?.trim();
+  const now = new Date();
+  const recent = opts.recent || f.status === "activeOnly" || f.withinDays != null;
   const where: Prisma.SubscriptionWhereInput = {
+    ...(recent ? recentOnly(now) : {}),
     ...(f.status && f.status !== "activeOnly" ? { status: f.status } : {}),
     ...(q
       ? {
@@ -60,8 +74,15 @@ export async function listSubscriptions(f: SubscriptionFilters = {}): Promise<Ad
         }
       : {}),
   };
-  const now = new Date();
-  const rows = (await db.subscription.findMany({ where, include: subInclude, orderBy: { createdAt: "desc" }, take: 1000 })).map((s) => enrich(s, now));
+  // Recent-only lists are complete; the full list shows the 1000 most relevant (latest end first).
+  const rows = (
+    await db.subscription.findMany({
+      where,
+      include: subInclude,
+      orderBy: [{ endsAt: { sort: "desc", nulls: "first" } }, { createdAt: "desc" }],
+      take: recent ? 50_000 : 1000,
+    })
+  ).map((s) => enrich(s, now));
 
   let out = rows;
   if (f.status === "activeOnly") out = out.filter((s) => s.active);
@@ -80,7 +101,7 @@ export async function dashboardStats() {
   await expireStalePendingOrders(now).catch((e) => console.error("[admin] expiring stale orders failed", e));
 
   const [subs, openOrders, paidOrders30, payments30, checkinsToday, recentOrders, recentEvents] = await Promise.all([
-    listSubscriptions(),
+    listSubscriptions({}, { recent: true }),
     db.order.count({ where: { status: { in: ["pending", "paid", "pay_on_delivery", "processing", "ready"] } } }),
     // Only amounts in the gym's currency are summed: Lemon Squeezy invoices are in the store
     // currency (e.g. USD cents) and can't be added to JOD fils.

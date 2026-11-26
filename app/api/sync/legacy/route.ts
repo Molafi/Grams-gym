@@ -2,9 +2,12 @@ import { env, syncConfigured } from "@/lib/env";
 import { verifySync } from "@/lib/sync/signature";
 import { MIRROR } from "@/lib/sync/legacy-schema";
 import { ensureTable, mirrorStatus, tableMaxSrcIds, upsertRows, type LegacyRow } from "@/lib/sync/legacy-ingest";
+import { syncMembersFromMirror } from "@/features/admin/legacy-sync";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// The first "apply" creates every member and membership (allowed on all Vercel plans).
+export const maxDuration = 60;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -18,6 +21,8 @@ const json = (body: unknown, status = 200) =>
  *   { "op": "cursors" }                                  → { cursors: { table: maxSrcId } }
  *   { "op": "status" }                                   → { tables: [{ table, rows, lastSyncedAt }] }
  *   { "op": "upsert", "table": "clocks", "rows": [...] } → { ok, table, upserted }
+ *   { "op": "apply" }                                    → turn the mirrored member tables into website
+ *                                                          members and memberships → { ok, summary, … }
  */
 export async function POST(req: Request) {
   if (!syncConfigured) return json({ error: "sync not configured (set SYNC_SECRET)" }, 503);
@@ -56,6 +61,12 @@ export async function POST(req: Request) {
         await ensureTable(table);
         const upserted = await upsertRows(table, rows);
         return json({ ok: true, table, received: rows.length, upserted });
+      }
+
+      case "apply": {
+        const result = await syncMembersFromMirror(null);
+        if (!result.ok) return json({ ok: false, error: result.reason }, 409);
+        return json(result);
       }
 
       default:

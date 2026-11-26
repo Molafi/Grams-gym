@@ -126,9 +126,10 @@ export async function tableMaxSrcIds(): Promise<Record<string, number>> {
 }
 
 /** Row counts + freshness per table — for an admin status view. */
-export async function mirrorStatus(): Promise<{ table: string; rows: number; lastSyncedAt: string | null }[]> {
+export async function mirrorStatus(tables: readonly string[] = MIRROR_TABLES): Promise<{ table: string; rows: number; lastSyncedAt: string | null }[]> {
   const out: { table: string; rows: number; lastSyncedAt: string | null }[] = [];
-  for (const table of MIRROR_TABLES) {
+  for (const table of tables) {
+    if (!MIRROR[table]) continue;
     const tbl = mirrorTableName(table);
     try {
       const rows = await db.$queryRawUnsafe<{ n: bigint | number; last: Date | null }[]>(

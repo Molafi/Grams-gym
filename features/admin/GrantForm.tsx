@@ -45,7 +45,7 @@ export function GrantForm({ plans }: { plans: { slug: string; name: string }[] }
         {mode === "existing" ? (
           <label className="xl:col-span-2">
             <span className="mb-1 block text-xs text-muted">{t("memberNumber")}</span>
-            <input name="memberNumber" required placeholder="GG-00042" className="field" dir="ltr" />
+            <input name="memberNumber" required placeholder="00042" className="field" dir="ltr" />
           </label>
         ) : (
           <>
