@@ -89,10 +89,11 @@ export async function upsertRows(table: string, rows: LegacyRow[]): Promise<numb
       if (srcId === null) continue; // can't upsert without a primary key
       const ph: string[] = [];
       params.push(srcId);
-      ph.push(`$${params.length}`);
+      ph.push(`$${params.length}::bigint`);
       for (const [src, type] of def.columns) {
         params.push(coerce(type, r[src]));
-        ph.push(`$${params.length}`);
+        // Dates, times and decimals arrive as text: Postgres needs the cast to store them.
+        ph.push(`$${params.length}::${PG_TYPE_SQL[type]}`);
       }
       tuples.push(`(${ph.join(",")})`);
     }
@@ -108,11 +109,24 @@ export async function upsertRows(table: string, rows: LegacyRow[]): Promise<numb
   return written;
 }
 
+/** Which of these mirror tables exist yet (each is created by its first sync). */
+async function existingTables(tables: readonly string[]): Promise<Set<string>> {
+  const names = tables.filter((t) => MIRROR[t]).map(mirrorTableName);
+  if (names.length === 0) return new Set();
+  const rows = await db.$queryRaw<{ name: string }[]>`SELECT tablename AS name FROM pg_tables WHERE schemaname = 'public' AND tablename = ANY(${names})`;
+  return new Set(rows.map((r) => r.name));
+}
+
 /** Highest src_id stored per table (0 if the table doesn't exist yet). Lets the agent resume. */
 export async function tableMaxSrcIds(): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
+  const existing = await existingTables(MIRROR_TABLES);
   for (const table of MIRROR_TABLES) {
     const tbl = mirrorTableName(table);
+    if (!existing.has(tbl)) {
+      out[table] = 0;
+      continue;
+    }
     try {
       const rows = await db.$queryRawUnsafe<{ max: bigint | number | null }[]>(
         `SELECT COALESCE(MAX(src_id), 0) AS max FROM "${tbl}"`,
@@ -126,10 +140,16 @@ export async function tableMaxSrcIds(): Promise<Record<string, number>> {
 }
 
 /** Row counts + freshness per table — for an admin status view. */
-export async function mirrorStatus(): Promise<{ table: string; rows: number; lastSyncedAt: string | null }[]> {
+export async function mirrorStatus(tables: readonly string[] = MIRROR_TABLES): Promise<{ table: string; rows: number; lastSyncedAt: string | null }[]> {
   const out: { table: string; rows: number; lastSyncedAt: string | null }[] = [];
-  for (const table of MIRROR_TABLES) {
+  const existing = await existingTables(tables);
+  for (const table of tables) {
+    if (!MIRROR[table]) continue;
     const tbl = mirrorTableName(table);
+    if (!existing.has(tbl)) {
+      out.push({ table, rows: 0, lastSyncedAt: null });
+      continue;
+    }
     try {
       const rows = await db.$queryRawUnsafe<{ n: bigint | number; last: Date | null }[]>(
         `SELECT COUNT(*) AS n, MAX(synced_at) AS last FROM "${tbl}"`,

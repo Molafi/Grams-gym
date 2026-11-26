@@ -25,7 +25,7 @@ const schema = z.object({
   TEST_MEMBER_PASSWORD: opt,
   TEST_ADMIN_EMAIL: opt,
   TEST_ADMIN_PASSWORD: opt,
-  /** View-only guest admin (GG-99002). Always on in local test mode; in production only with this flag. */
+  /** View-only guest admin (99002). Always on in local test mode; in production only with this flag. */
   ENABLE_GUEST_ADMIN: flag(false),
   GUEST_ADMIN_PASSWORD: opt,
 

@@ -1,10 +1,10 @@
 import { getTranslations } from "next-intl/server";
 import { LogOut } from "lucide-react";
 import { requireUser } from "@/lib/auth/guards";
-import { Container } from "@/components/ui/primitives";
+import { Card, Container } from "@/components/ui/primitives";
 import { signOutAction } from "@/features/auth/actions";
+import { ChangePasswordForm } from "@/features/auth/AuthForms";
 import { AccountTabs } from "./tabs";
-import { Link } from "@/lib/i18n/navigation";
 import { formatMemberNumber } from "@/lib/member-number";
 
 export const metadata = { robots: { index: false } };
@@ -24,7 +24,7 @@ export default async function AccountLayout({ children, params }: { children: Re
             <h1 className="display text-4xl sm:text-5xl">{t("hello", { name: user.name ?? "" })}</h1>
             <p className="mt-3 text-sm text-muted">
               {t("yourNumber")}{" "}
-              <span className="font-mono text-base text-ember" dir="ltr">
+              <span className="font-mono text-base text-ember" dir="ltr" data-testid="member-number">
                 {formatMemberNumber(user.memberNumber)}
               </span>
             </p>
@@ -37,15 +37,19 @@ export default async function AccountLayout({ children, params }: { children: Re
           </form>
         </div>
         {user.mustChangePassword ? (
-          <p role="alert" className="mb-8 rounded-xl border border-warning/50 bg-warning/10 px-4 py-3 text-sm">
-            {t("mustChange")}{" "}
-            <Link href="/account/settings" className="text-ember underline underline-offset-4">
-              {t("mustChangeLink")}
-            </Link>
-          </p>
-        ) : null}
-        <AccountTabs />
-        <div className="mt-10">{children}</div>
+          // A temporary password (first sign-in with the membership number, or one the front
+          // desk gave): choosing a real one comes before everything else in the account.
+          <Card className="max-w-xl p-7">
+            <h2 className="display text-xl">{t("mustChangeTitle")}</h2>
+            <p className="mb-6 mt-2 text-sm text-muted">{t("mustChangeBody")}</p>
+            <ChangePasswordForm />
+          </Card>
+        ) : (
+          <>
+            <AccountTabs />
+            <div className="mt-10">{children}</div>
+          </>
+        )}
       </Container>
     </section>
   );

@@ -16,6 +16,7 @@ import { closeOrder, isClosed } from "@/lib/orders";
 import { hashPassword, temporaryPassword } from "@/lib/auth/password";
 import { formatMemberNumber, parseMemberNumber } from "@/lib/member-number";
 import { phoneDigits } from "@/lib/phone";
+import { ensureSiteNumberSequence } from "@/lib/site-numbers";
 
 export type AdminState = {
   ok?: boolean;
@@ -85,6 +86,8 @@ export async function grantMembership(_prev: AdminState, fd: FormData): Promise<
     if (samePhone) return { error: "phoneExists", memberNumber: formatMemberNumber(samePhone.memberNumber) };
     tempPassword = temporaryPassword();
     try {
+      // Website accounts get numbers from 50000 (the old gym program uses the lower ones).
+      await ensureSiteNumberSequence();
       user = await db.user.create({
         data: {
           name: input.name,
@@ -252,6 +255,7 @@ export async function createStaffAccount(_prev: AdminState, fd: FormData): Promi
   if (!name) return { error: "invalid" };
   const tempPassword = temporaryPassword();
   try {
+    await ensureSiteNumberSequence();
     const user = await db.user.create({
       data: { name, phone, phoneDigits: digits, email: email ?? null, role, passwordHash: await hashPassword(tempPassword), mustChangePassword: true },
       select: { id: true, memberNumber: true, name: true },
@@ -541,7 +545,7 @@ export type CheckInResult = {
 export async function checkInMember(_prev: CheckInResult | null, fd: FormData): Promise<CheckInResult> {
   const actor = await assertRole("STAFF");
   const raw = String(fd.get("code") ?? "").trim();
-  // Either the QR code from the member card, or a typed membership number (GG-00042 / 42).
+  // Either the QR code from the member card, or a typed membership number (00042 / 42).
   const number = parseMemberNumber(raw);
   const code = raw.startsWith("GG:") ? raw.slice(3) : raw;
   const sub = number

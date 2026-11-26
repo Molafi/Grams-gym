@@ -1,0 +1,107 @@
+# End-to-end test of the sync with the old gym program: a copy of its database (MariaDB, like
+# XAMPP), the real agent (sync/agent), and the website with its own database. Checks the members
+# it creates, the first sign-in with the membership number, admin rights and the dashboard.
+name: Sync end-to-end
+
+on:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      gymdb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: gymgdata
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "mariadb-admin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      # Throwaway values for local test databases; nothing here is a real secret.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      AUTH_SECRET: ci-placeholder-not-a-real-secret
+      AUTH_TRUST_HOST: "true"
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+      SYNC_SECRET: ci-sync-secret-0123456789abcdef
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Website database (schema + seed with demo members)
+        run: npx prisma db push --skip-generate && npm run db:seed
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Start the website
+        run: |
+          npm start > "$RUNNER_TEMP/server.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3000/ar && exit 0; sleep 2; done
+          cat "$RUNNER_TEMP/server.log"; exit 1
+      - name: Old gym program database
+        run: |
+          node tests/e2e/sync/fixture.mjs > "$RUNNER_TEMP/fixture.sql"
+          docker exec -i ${{ job.services.gymdb.id }} mariadb --default-character-set=utf8mb4 -uroot -proot gymgdata < "$RUNNER_TEMP/fixture.sql"
+      - name: Sync agent (read-only login)
+        working-directory: sync/agent
+        run: |
+          npm install --no-audit --no-fund
+          cat > config.json <<EOF
+          {
+            "mysql": { "host": "127.0.0.1", "port": 3306, "user": "ggsync", "password": "ggsync-ci", "database": "gymgdata" },
+            "cloud": { "url": "http://localhost:3000/api/sync/legacy", "secret": "$SYNC_SECRET" },
+            "tables": { "append": [], "full": ["members", "programs", "offers", "subscriptions", "subscriptionsx", "freezes"] }
+          }
+          EOF
+          node agent.mjs --ping
+      - name: First sync
+        run: node sync/agent/agent.mjs --once
+      - run: node tests/e2e/sync/verify.mjs first
+      - name: Second sync (nothing changed in the program)
+        run: |
+          node sync/agent/agent.mjs --once | tee "$RUNNER_TEMP/run2.log"
+          grep -q "no changes" "$RUNNER_TEMP/run2.log"
+      - run: node tests/e2e/sync/verify.mjs unchanged
+      - name: Staff unfreeze, renew and add a member in the program, then sync
+        run: |
+          node tests/e2e/sync/fixture.mjs changes | docker exec -i ${{ job.services.gymdb.id }} mariadb --default-character-set=utf8mb4 -uroot -proot gymgdata
+          node sync/agent/agent.mjs --once
+      - run: node tests/e2e/sync/verify.mjs changed
+      - name: Sign-in, admin and sign-up in the browser
+        run: node tests/e2e/sync/ui.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-shots
+          path: sync-shots/
+          retention-days: 7
+      - if: failure()
+        run: cat "$RUNNER_TEMP/server.log" || true

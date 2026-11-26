@@ -281,8 +281,8 @@ async function seedTestUsers() {
   const testMode = process.env.ENABLE_TEST_ACCOUNT === "true" && process.env.NODE_ENV !== "production";
   const guestPassword = process.env.GUEST_ADMIN_PASSWORD || (testMode ? "guest-preview" : undefined);
   await ensureDemoAccounts(db, { memberEmail: member, memberPassword: process.env.TEST_MEMBER_PASSWORD, guestPassword });
-  if (member && process.env.TEST_MEMBER_PASSWORD) console.log(`  Test member:  GG-${TEST_MEMBER_NUMBER} / ${process.env.TEST_MEMBER_PASSWORD}`);
-  if (guestPassword) console.log(`  Guest admin:  GG-${GUEST_ADMIN_NUMBER} / ${guestPassword}  (view only)`);
+  if (member && process.env.TEST_MEMBER_PASSWORD) console.log(`  Test member:  ${TEST_MEMBER_NUMBER} / ${process.env.TEST_MEMBER_PASSWORD}`);
+  if (guestPassword) console.log(`  Guest admin:  ${GUEST_ADMIN_NUMBER} / ${guestPassword}  (view only)`);
 }
 
 async function seedProducts() {

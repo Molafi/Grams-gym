@@ -450,7 +450,7 @@
       "rate": "Too many attempts. Please wait a few minutes.",
       "invalid": "Please check the form.",
       "mismatch": "The two passwords don't match.",
-      "phoneTaken": "This phone number is already registered. Ask at the front desk for your membership number.",
+      "phoneTaken": "This phone number already has an account. Sign in with your membership number. The first time, your password is your membership number too.",
       "emailTaken": "This email is already used by another member.",
       "weak": "The password must be at least 8 characters.",
       "current": "Your current password is wrong.",
@@ -463,7 +463,8 @@
     "testGuestShort": "Guest admin",
     "referrerOptional": "Friend's membership number (optional)",
     "referrerHint": "If a friend invited you, enter their number. They get free days when your membership starts.",
-    "contactBonusHint": "Add your email too and get {days} free on your first membership."
+    "contactBonusHint": "Add your email too and get {days} free on your first membership.",
+    "firstTime": "First time here? Your password is your membership number. You'll choose your own right after."
   },
   "account": {
     "title": "My account",
@@ -520,13 +521,15 @@
       "tooLate": "It's too late to add who invited you.",
       "loop": "You invited this member, so they can't be your inviter.",
       "rate": "Too many attempts. Please try again later.",
-      "invalid": "Enter a membership number like GG-00042."
+      "invalid": "Enter a membership number like 00042."
     },
     "referListTitle": "Friends you invited",
     "referListSummary": "{count, plural, one {# friend invited} other {# friends invited}} · {rewarded} rewarded",
     "referListEmpty": "No friends yet. Share your membership number to get started.",
     "referStatusRewarded": "+{days}",
-    "referStatusPending": "Waiting for their first membership"
+    "referStatusPending": "Waiting for their first membership",
+    "mustChangeTitle": "Choose your own password",
+    "mustChangeBody": "Before you continue, choose a new password. Your current password is your membership number, or the temporary password the front desk gave you."
   },
   "admin": {
     "title": "Admin",
@@ -779,7 +782,7 @@
     "guestBlocked": "Guest admin is view only — this change wasn't saved.",
     "import": {
       "title": "Import members",
-      "intro": "Move members and their memberships over from the old gym program. Each member keeps their old number (04852 becomes GG-04852).",
+      "intro": "Move members and their memberships over from the old gym program. Each member keeps their old number (for example 04852).",
       "howTitle": "How to copy the data from the old program",
       "how1": "Open the Subscriptions (or Members) list. If it has a filter, show all members, not only active ones.",
       "how2": "Click any row in the table, then press Ctrl+A and Ctrl+C.",
@@ -835,7 +838,7 @@
       "conflicts": "Not imported, because these numbers already belong to other accounts on this site: {numbers}",
       "sharedPhones": "These members share a phone number with another member, so their phone can't be used to sign up online: {numbers}",
       "renumbered": "{count} demo members were moved to new numbers to make room.",
-      "next": "Imported members can't sign in yet. When one asks, open Members, search their number, and press Reset password to give them a temporary password.",
+      "next": "Imported members can sign in right away: their membership number is their username and, the first time, their password. Then they choose their own password.",
       "errors": {
         "empty": "Paste the table or choose a file first.",
         "noHeader": "Couldn't find the column titles. Copy the table including its title row (Member #, Member, Mobile…).",
@@ -844,6 +847,27 @@
         "readOnly": "Guest admin is view only.",
         "forbidden": "Only admins can import.",
         "generic": "Something went wrong. Please try again."
+      },
+      "sync": {
+        "title": "Sync with the gym program",
+        "intro": "The sync agent on the gym PC sends members and memberships to the website every few minutes, and the website updates its members automatically. Make changes to members and memberships in the gym program.",
+        "notConfigured": "Not set up yet: add SYNC_SECRET in Vercel and run the sync agent on the gym PC (sync/README.md).",
+        "imported": "Members from the gym program",
+        "activeNow": "Active right now",
+        "activeHint": "Compare with the active count in the gym program.",
+        "lastChange": "Last member update",
+        "lastChangeNone": "No update yet.",
+        "lastChangeDetail": "{created} new members, {updated} updated, {periods} new memberships",
+        "conflicts": "These numbers belong to accounts created on the website, so they weren't copied: {numbers}. Change that website account's number, then update again.",
+        "table": "Table",
+        "rows": "Rows",
+        "received": "Last received",
+        "never": "Not received yet",
+        "runNow": "Update members now",
+        "running": "Updating…",
+        "result": "Done: {created} new members, {updated} updated, {periods} new memberships.",
+        "noMirror": "No data from the gym program has arrived yet.",
+        "failed": "The update didn't work. Please try again."
       }
     },
     "gender": {

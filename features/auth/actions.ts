@@ -8,6 +8,8 @@ import { z } from "zod";
 import { signIn, signOut } from "@/lib/auth/auth";
 import { getSessionUser } from "@/lib/auth/guards";
 import { hashPassword, PASSWORD_MIN, verifyPassword } from "@/lib/auth/password";
+import { canUseDefaultPassword, isDefaultPassword } from "@/lib/auth/default-password";
+import { ensureSiteNumberSequence } from "@/lib/site-numbers";
 import { db } from "@/lib/db";
 import { env, guestAdminEnabled, guestAdminPassword, testAccountsEnabled, testAdminEnabled } from "@/lib/env";
 import { ensureDemoAccounts, GUEST_ADMIN_NUMBER } from "@/lib/demo-accounts";
@@ -115,6 +117,8 @@ export async function registerMember(_prev: AuthFormState, formData: FormData): 
   // by phone would let them take over someone else's membership.
   let number: number;
   try {
+    // Website accounts get numbers from 50000 (the old gym program uses the lower ones).
+    await ensureSiteNumberSequence();
     const user = await db.user.create({
       data: {
         name: input.name,
@@ -170,10 +174,18 @@ export async function changePassword(_prev: AuthFormState, formData: FormData): 
   });
   if (!parsed.success) return { error: parsed.error.issues.some((i) => i.path[0] === "confirm") ? "mismatch" : "weak" };
 
-  const user = await db.user.findUniqueOrThrow({ where: { id: session.id }, select: { passwordHash: true, isTestAccount: true, isGuest: true, memberNumber: true } });
+  const user = await db.user.findUniqueOrThrow({
+    where: { id: session.id },
+    select: { passwordHash: true, isTestAccount: true, isGuest: true, memberNumber: true, importedAt: true, role: true },
+  });
   if (user.isTestAccount || user.isGuest) return { error: "generic" }; // shared demo logins keep their password
-  // The current password is always required (a temporary one counts).
-  if (!(await verifyPassword(parsed.data.current ?? "", user.passwordHash))) return { error: "current" };
+  // The current password is always required (a temporary one counts, and so does the
+  // membership number for an imported member who hasn't chosen a password yet).
+  const current = parsed.data.current ?? "";
+  const currentOk = (await verifyPassword(current, user.passwordHash)) || (canUseDefaultPassword(user) && isDefaultPassword(current, user.memberNumber));
+  if (!currentOk) return { error: "current" };
+  // The membership number can't become the real password.
+  if (isDefaultPassword(parsed.data.password, user.memberNumber)) return { error: "weak" };
 
   // Bumping sessionVersion signs out every other device; this one signs straight back in.
   await db.user.update({
@@ -202,7 +214,7 @@ export async function signInAsTestAccount(formData: FormData) {
   if (!email || !password) redirect(`/${locale}/signin?error=testConfig`);
 
   if (dbKnownDown()) redirect(`/${locale}/signin?error=db`);
-  // Keeps GG-99001 (test member) usable with the normal number + password form too.
+  // Keeps 99001 (test member) usable with the normal number + password form too.
   if (kind === "member") {
     try {
       await ensureDemoAccounts(db, { memberEmail: email, memberPassword: password });
@@ -225,7 +237,7 @@ export async function signInAsTestAccount(formData: FormData) {
   }
 }
 
-/** One-click view-only guest admin (local test mode only; in production it signs in with GG-99002 + password). */
+/** One-click view-only guest admin (local test mode only; in production it signs in with 99002 + password). */
 export async function signInAsGuestAdmin(formData: FormData) {
   const locale = localeOf(formData);
   const password = guestAdminPassword;

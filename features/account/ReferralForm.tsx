@@ -21,7 +21,7 @@ export function ReferralForm() {
       <div className="flex flex-wrap gap-3">
         <label className="min-w-[12rem] flex-1">
           <span className="sr-only">{t("referWhoLabel")}</span>
-          <input name="referrer" required maxLength={20} placeholder="GG-00042" autoComplete="off" className="field" dir="ltr" />
+          <input name="referrer" required maxLength={20} placeholder="00042" autoComplete="off" className="field" dir="ltr" />
         </label>
         <Button type="submit" disabled={pending}>
           {pending ? tc("loading") : t("referWhoSubmit")}

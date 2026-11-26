@@ -26,11 +26,12 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
       <input type="hidden" name="callbackUrl" value={callbackUrl} />
       <label className="block">
         <span className="mb-1.5 block text-sm text-muted">{t("memberNumber")}</span>
-        <input name="memberNumber" required inputMode="text" autoComplete="username" placeholder="GG-00042" className="field" dir="ltr" />
+        <input name="memberNumber" required inputMode="numeric" autoComplete="username" placeholder="00042" className="field" dir="ltr" />
       </label>
       <label className="block">
         <span className="mb-1.5 block text-sm text-muted">{t("password")}</span>
         <input name="password" type="password" required autoComplete="current-password" className="field" dir="ltr" />
+        <span className="mt-1 block text-xs text-muted">{t("firstTime")}</span>
       </label>
       <ErrorLine state={state} />
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
@@ -74,7 +75,7 @@ export function RegisterForm({ callbackUrl, bonusHint = "" }: { callbackUrl: str
       </label>
       <label className="block">
         <span className="mb-1.5 block text-sm text-muted">{t("referrerOptional")}</span>
-        <input name="referrer" maxLength={20} placeholder="GG-00042" autoComplete="off" className="field" dir="ltr" />
+        <input name="referrer" maxLength={20} placeholder="00042" autoComplete="off" className="field" dir="ltr" />
         <span className="mt-1 block text-xs text-muted">{t("referrerHint")}</span>
       </label>
       {bonusHint ? <p className="text-xs text-muted">{bonusHint}</p> : null}

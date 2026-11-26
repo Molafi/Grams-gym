@@ -3,8 +3,8 @@ import { hashPassword } from "./auth/password";
 
 /**
  * Two demo accounts with fixed membership numbers (far above real ones):
- *   GG-99001  test member   — password TEST_MEMBER_PASSWORD
- *   GG-99002  guest admin   — password GUEST_ADMIN_PASSWORD; sees every admin page, changes nothing
+ *   99001  test member   — password TEST_MEMBER_PASSWORD
+ *   99002  guest admin   — password GUEST_ADMIN_PASSWORD; sees every admin page, changes nothing
  * No "server-only" import: the seed (run with tsx) uses this too.
  */
 export const TEST_MEMBER_NUMBER = 99001;

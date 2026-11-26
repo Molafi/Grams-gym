@@ -59,7 +59,7 @@ const ALIASES: Record<ImportField, string[]> = {
 };
 
 /** Arabic-Indic and Persian digits → 0-9. */
-const latinDigits = (s: string) =>
+export const latinDigits = (s: string) =>
   s.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (c) => String((c.charCodeAt(0) & 0xf) % 10));
 
 /** Lower-case, no Arabic diacritics/tatweel, one space, no trailing ":" or ".". */
@@ -180,6 +180,12 @@ export function parseDate(raw: string, order: DateOrder): Ymd | null {
 }
 
 export const ymdIso = (v: Ymd) => `${v.y}-${String(v.m).padStart(2, "0")}-${String(v.d).padStart(2, "0")}`;
+
+/** Today's date in Amman. */
+export function ammanToday(now: Date = new Date()): Ymd {
+  const [y, m, d] = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Amman", year: "numeric", month: "2-digit", day: "2-digit" }).format(now).split("-").map(Number);
+  return { y: y!, m: m!, d: d! };
+}
 
 /** Midnight in Amman (UTC+3 all year since 2022) at the start of `v` + `plusDays`. */
 export const startOfAmmanDay = (v: Ymd, plusDays = 0) => new Date(Date.UTC(v.y, v.m - 1, v.d + plusDays) - 3 * 3_600_000);
